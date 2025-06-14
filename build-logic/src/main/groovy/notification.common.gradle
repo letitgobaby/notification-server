@@ -1,0 +1,22 @@
+
+plugins {
+    id 'java'
+}
+
+// Foojay Toolchains 플러그인은 루트 build.gradle에서 적용되었으므로,
+// 여기서는 toolchain 설정만 해주면 됩니다.
+java {
+    toolchain {
+        // Java 17을 사용하도록 설정합니다.
+        languageVersion = JavaLanguageVersion.of(17)
+
+        // https://github.com/gradle/foojay-toolchains?tab=readme-ov-file#vendors
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+
