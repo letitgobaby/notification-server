@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import notification.domain.common.exceptions.DomainFieldNullException;
 import notification.domain.common.exceptions.DomainValidationException;
 import notification.domain.notification.NotificationRequest;
 import notification.domain.notification.enums.AudienceType;
@@ -74,7 +75,7 @@ class NotificationRequestTest {
 
         assertEquals(NotificationType.SMS, request.getType());
         assertEquals(content, request.getContent());
-        assertEquals(recipient, request.getRecipien());
+        assertEquals(recipient, request.getRecipient());
     }
 
     @Test
@@ -96,7 +97,7 @@ class NotificationRequestTest {
 
         assertEquals(NotificationType.PUSH, request.getType());
         assertEquals(content, request.getContent());
-        assertEquals(recipient, request.getRecipien());
+        assertEquals(recipient, request.getRecipient());
     }
 
     @Test
@@ -118,7 +119,7 @@ class NotificationRequestTest {
 
         assertEquals(NotificationType.EMAIL, request.getType());
         assertEquals(content, request.getContent());
-        assertEquals(recipient, request.getRecipien());
+        assertEquals(recipient, request.getRecipient());
     }
 
     @DisplayName("예약 시각이 과거인 경우 DomainValidationException을 던진다")
@@ -158,25 +159,35 @@ class NotificationRequestTest {
         Instant baseRequestedAt = Instant.now();
 
         return Stream.of(
-                Arguments.of(null, baseRequesterId, baseRequesterType, baseType, baseAudienceType, baseRecipient,
+                Arguments.of(null, baseRequesterId, baseRequesterType, baseType, baseAudienceType,
+                        baseRecipient,
                         baseContent, baseScheduledAt, basePriority, baseRequestedAt),
-                Arguments.of(baseNotificationId, null, baseRequesterType, baseType, baseAudienceType, baseRecipient,
+                Arguments.of(baseNotificationId, null, baseRequesterType, baseType, baseAudienceType,
+                        baseRecipient,
                         baseContent, baseScheduledAt, basePriority, baseRequestedAt),
-                Arguments.of(baseNotificationId, baseRequesterId, null, baseType, baseAudienceType, baseRecipient,
+                Arguments.of(baseNotificationId, baseRequesterId, null, baseType, baseAudienceType,
+                        baseRecipient,
                         baseContent, baseScheduledAt, basePriority, baseRequestedAt),
-                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, null, baseAudienceType,
-                        baseRecipient, baseContent, baseScheduledAt, basePriority, baseRequestedAt),
-                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType, null, baseRecipient,
+                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, null,
+                        baseAudienceType,
+                        baseRecipient, baseContent, baseScheduledAt, basePriority,
+                        baseRequestedAt),
+                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType, null,
+                        baseRecipient,
                         baseContent, baseScheduledAt, basePriority, baseRequestedAt),
-                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType, baseAudienceType, null,
+                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType,
+                        baseAudienceType, null,
                         baseContent, baseScheduledAt, basePriority, baseRequestedAt),
-                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType, baseAudienceType,
+                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType,
+                        baseAudienceType,
                         baseRecipient, null, baseScheduledAt, basePriority, baseRequestedAt),
                 // priority가 null일 때 예외 발생 테스트 추가 (현재 생성자 로직에서 Objects.requireNonNull로 처리)
-                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType, baseAudienceType,
+                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType,
+                        baseAudienceType,
                         baseRecipient, baseContent, baseScheduledAt, null, baseRequestedAt),
                 // requestedAt이 null일 때 예외 발생 테스트 추가 (현재 생성자 로직에서 Objects.requireNonNull로 처리)
-                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType, baseAudienceType,
+                Arguments.of(baseNotificationId, baseRequesterId, baseRequesterType, baseType,
+                        baseAudienceType,
                         baseRecipient, baseContent, baseScheduledAt, basePriority, null));
     }
 
@@ -195,7 +206,7 @@ class NotificationRequestTest {
             Priority priority,
             Instant requestedAt) {
 
-        assertThrows(DomainValidationException.class, () -> new NotificationRequest(
+        assertThrows(DomainFieldNullException.class, () -> new NotificationRequest(
                 notificationId,
                 requesterId,
                 requesterType,
@@ -218,7 +229,8 @@ class NotificationRequestTest {
                         new SmsContent(null, null, "Hello, SMS!", false),
                         new PushRecipient(List.of("device-token-1"))),
                 Arguments.of(NotificationType.EMAIL,
-                        new PushContent(null, null, "Push title", "Push body", null, null, null),
+                        new PushContent(null, null, "Push title", "Push body", null, null,
+                                null),
                         new EmailRecipient(List.of("example@gmail.com"), null, null)));
     }
 

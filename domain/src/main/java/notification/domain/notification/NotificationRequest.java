@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import lombok.Getter;
 import notification.domain.common.annotations.AggregateRoot;
+import notification.domain.common.exceptions.DomainFieldNullException;
 import notification.domain.common.exceptions.DomainValidationException;
 import notification.domain.notification.enums.AudienceType;
 import notification.domain.notification.enums.NotificationType;
@@ -33,15 +34,14 @@ public class NotificationRequest {
 
     private final AudienceType audienceType; // 대상 유형 (예: INDIVIDUAL, GROUP, BROADCAST 등)
     private final NotificationContent content; // 템플릿 ID, 템플릿 변수, 이미지 URL, 딥링크 등
-    private final Recipient recipien; // 수신자 식별 정보 (예: userIds, chatRoomId, emailAddress, phoneNumber)
+    private final Recipient recipient; // 수신자 식별 정보 (예: userIds, chatRoomId, emailAddress, phoneNumber)
 
     private Instant scheduledAt;
     private final Priority priority;
     private final Instant requestedAt;
 
     public NotificationRequest(NotificationId notificationId, RequesterId requesterId,
-            RequesterType requesterType,
-            NotificationType type, AudienceType audienceType, Recipient recipien,
+            RequesterType requesterType, NotificationType type, AudienceType audienceType, Recipient recipient,
             NotificationContent content, Instant scheduledAt, Priority priority, Instant requestedAt) {
 
         try {
@@ -50,13 +50,13 @@ public class NotificationRequest {
             this.requesterType = Objects.requireNonNull(requesterType, "Requester type cannot be null");
             this.type = Objects.requireNonNull(type, "Notification type cannot be null");
             this.audienceType = Objects.requireNonNull(audienceType, "Audience type cannot be null");
-            this.recipien = Objects.requireNonNull(recipien, "Recipient info cannot be null");
+            this.recipient = Objects.requireNonNull(recipient, "Recipient info cannot be null");
             this.content = Objects.requireNonNull(content, "Payload cannot be null");
             this.scheduledAt = scheduledAt; // 예약 발송 시간은 null일 수 있음
             this.priority = Objects.requireNonNull(priority, "Priority cannot be null");
             this.requestedAt = Objects.requireNonNull(requestedAt, "Requested time cannot be null");
         } catch (NullPointerException e) {
-            throw new DomainValidationException(e.getMessage(), e);
+            throw new DomainFieldNullException(e.getMessage(), e);
         }
 
         // 비즈니스 규칙 검증
@@ -64,11 +64,11 @@ public class NotificationRequest {
     }
 
     private void validateBusinessRules() {
-        if (scheduledAt != null && scheduledAt.isBefore(Instant.now())) {
+        if (scheduledAt != null && scheduledAt.isBefore(Instant.now().minusSeconds(1))) {
             throw new DomainValidationException("Scheduled time cannot be in the past");
         }
 
-        if (!isContentAndRecipientTypeConsistent(this.type, this.content, this.recipien)) {
+        if (!isContentAndRecipientTypeConsistent(this.type, this.content, this.recipient)) {
             throw new DomainValidationException(
                     "Notification type, content type, and recipient type are inconsistent.");
         }
