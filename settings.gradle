@@ -17,6 +17,6 @@ rootProject.name = 'notification'
 
 include(
     'domain',
-    // 'application',
+    'application',
     // 'bootstrap'
 )
