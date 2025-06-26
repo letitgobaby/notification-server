@@ -6,6 +6,7 @@ bootJar { enabled = false }
 jar { enabled = true }
 
 dependencies {
+    implementation project(':definition')
     implementation project(':domain')
 
 }
