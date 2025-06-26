@@ -16,7 +16,9 @@ dependencyResolutionManagement {
 rootProject.name = 'notification'
 
 include(
+    'definition',
     'domain',
     'application',
+    'infrastructure',
     // 'bootstrap'
 )

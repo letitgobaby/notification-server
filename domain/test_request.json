@@ -1,0 +1,181 @@
+{
+    "비회원 이메일 주소 및 회원 디바이스 토큰에 혼합 알림 발송 (즉시 발송)": {
+        "requester": {
+            "type": "SERVICE",
+            "id": "event-marketing-service"
+        },
+        "targetAudience": {
+            "type": "MIXED",
+            "userIds": [
+                "user-registered-a",
+                "user-registered-b"
+            ],
+            "directRecipients": [
+                {
+                    "phoneNumber": null,
+                    "emailAddress": "guest1@example.com",
+                    "deviceToken": null
+                },
+                {
+                    "phoneNumber": null,
+                    "emailAddress": null,
+                    "deviceToken": "non-member-device-token-xyz-1"
+                }
+            ]
+        },
+        "requestDetails": {
+            "useTemplate": true,
+            "templateInfo": {
+                "templateId": "NEW_PRODUCT_LAUNCH_V2",
+                "templateParameters": {
+                    "productName": "스마트워치 X",
+                    "launchDate": "2025년 7월 1일"
+                }
+            },
+            "channelConfigs": [
+                {
+                    "notificationType": "EMAIL",
+                    "senderInfo": {
+                        "senderEmailAddress": "no-reply@myproduct.com",
+                        "senderName": "내 제품 알림"
+                    }
+                },
+                {
+                    "notificationType": "PUSH",
+                    "senderInfo": {
+                        "senderName": "내 제품 앱"
+                    }
+                }
+            ]
+        },
+        "scheduledAt": null,
+        "memo": "신제품 출시 알림 (회원 + 비회원)"
+    },
+    "여러 회원에게 직접 작성한 SMS 알림 발송 (지연 발송)": {
+        "requester": {
+            "type": "ADMIN",
+            "id": "admin-sales-manager"
+        },
+        "targetAudience": {
+            "type": "MULTIPLE_USERS",
+            "userIds": [
+                "user-vip-001",
+                "user-vip-002",
+                "user-vip-003"
+            ]
+        },
+        "requestDetails": {
+            "useTemplate": false,
+            "directContent": {
+                "title": "[OO이벤트] 특별 할인 안내",
+                "body": "VIP 고객님들을 위한 여름 맞이 특별 할인! 지금 바로 앱에서 확인하세요. (~7/31)",
+                "redirectUrl": "https://www.ooevent.com/summer-sale",
+                "imageUrl": null
+            },
+            "channelConfigs": [
+                {
+                    "notificationType": "SMS",
+                    "senderInfo": {
+                        "senderPhoneNumber": "02-1234-5678",
+                        "senderName": "OO이벤트"
+                    }
+                }
+            ]
+        },
+        "scheduledAt": "2025-06-19T09:00:00",
+        "memo": "VIP 여름 할인 SMS 발송 (예약 발송)"
+    },
+    "단일 회원에게 템플릿 기반 푸시 알림 발송 (즉시 발송)": {
+        "requester": {
+            "type": "USER",
+            "id": "user-sender-456"
+        },
+        "targetAudience": {
+            "type": "SINGLE_USER",
+            "userIds": [
+                "user-recipient-123"
+            ]
+        },
+        "requestDetails": {
+            "useTemplate": true,
+            "templateInfo": {
+                "templateId": "ORDER_SHIPPED_V1",
+                "templateParameters": {
+                    "orderId": "ORD-20250618-001",
+                    "productName": "무선 이어버드",
+                    "shippingCompany": "대한통운",
+                    "trackingNumber": "1234-5678-9012"
+                }
+            },
+            "channelConfigs": [
+                {
+                    "notificationType": "PUSH",
+                    "senderInfo": {
+                        "senderName": "OO쇼핑"
+                    }
+                }
+            ]
+        },
+        "scheduledAt": null,
+        "memo": "주문 상품 발송 알림 (단건 테스트)"
+    },
+    "전체 회원 대상 공지 알림 발송 (즉시 발송)": {
+        "requester": {
+            "type": "ADMIN",
+            "id": "admin-system-alert"
+        },
+        "targetAudience": {
+            "type": "ALL_USERS"
+        },
+        "requestDetails": {
+            "useTemplate": false,
+            "directContent": {
+                "title": "🚨 시스템 점검 안내 (필독)",
+                "body": "안정적인 서비스 제공을 위해 2025년 6월 20일 오전 2시~5시 시스템 점검이 진행됩니다.",
+                "redirectUrl": "https://www.myservice.com/notice/123",
+                "imageUrl": null
+            },
+            "channelConfigs": [
+                {
+                    "notificationType": "PUSH",
+                    "senderInfo": {
+                        "senderName": "서비스 공지"
+                    }
+                }
+            ]
+        },
+        "scheduledAt": null,
+        "memo": "전체 회원 대상 긴급 공지 푸시"
+    },
+    "특정 세그먼트 회원 대상 프로모션 이메일 발송 (지연 발송)": {
+        "requester": {
+            "type": "SERVICE",
+            "id": "marketing-automation"
+        },
+        "targetAudience": {
+            "type": "SEGMENT",
+            "segmentName": "LOYAL_CUSTOMERS_PURCHASE_OVER_1M"
+        },
+        "requestDetails": {
+            "useTemplate": true,
+            "templateInfo": {
+                "templateId": "VIP_DISCOUNT_PROMO_EMAIL",
+                "templateParameters": {
+                    "discountRate": "15%",
+                    "couponCode": "VIP2025SUMMER"
+                }
+            },
+            "channelConfigs": [
+                {
+                    "notificationType": "EMAIL",
+                    "senderInfo": {
+                        "senderEmailAddress": "promo@myservice.com",
+                        "senderName": "내 서비스 프로모션"
+                    }
+                }
+            ]
+        },
+        "scheduledAt": "2025-06-25T14:00:00",
+        "memo": "고객 등급 기반 프로모션 이메일 예약 발송"
+    }
+}
