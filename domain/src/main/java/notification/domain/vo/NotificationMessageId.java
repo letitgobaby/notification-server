@@ -8,11 +8,11 @@ import notification.definition.annotations.ValueObject;
 public record NotificationMessageId(String value) {
     public NotificationMessageId {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("NotificationItemId cannot be null or blank");
+            throw new IllegalArgumentException("Notification message ID cannot be null or blank");
         }
     }
 
-    public static NotificationMessageId generate() {
+    public static NotificationMessageId create() {
         return new NotificationMessageId(UUID.randomUUID().toString());
     }
 

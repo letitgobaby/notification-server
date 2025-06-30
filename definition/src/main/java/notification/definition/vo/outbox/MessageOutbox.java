@@ -1,33 +1,28 @@
-package notification.domain;
+package notification.definition.vo.outbox;
 
 import java.time.Instant;
 import java.util.Objects;
 
 import lombok.Getter;
-import notification.definition.annotations.AggregateRoot;
 import notification.definition.enums.OutboxStatus;
 import notification.definition.exceptions.MandatoryFieldException;
 import notification.definition.exceptions.PolicyViolationException;
 import notification.definition.vo.JsonPayload;
-import notification.domain.vo.OutboxId;
 
-@AggregateRoot
 @Getter
-public class RequestOutboxMessage implements Outbox {
+public class MessageOutbox {
     private final OutboxId outboxId;
-    private final String aggregateType;
     private final String aggregateId;
-    private final String eventType;
     private final JsonPayload payload;
 
-    private OutboxStatus status; // 메시지 상태 (PENDING, FAILED)
+    private OutboxStatus status; // 메시지 상태 (PENDING, FAILED, SENT, DEAD)
     private Instant processedAt; // 처리된 시간 추가
     private int retryAttempts; // 재시도 횟수
     private Instant nextRetryAt; // 다음 재시도 예정 시각 == 알림 발송 시각
     private final Instant createdAt;
 
     /**
-     * OutboxMessage 생성자입니다.
+     * MessageOutbox 생성자입니다.
      *
      * @param outboxId      Outbox 메시지 ID
      * @param aggregateType 집계 타입 (예: NotificationRequest, NotificationMessage 등)
@@ -38,14 +33,12 @@ public class RequestOutboxMessage implements Outbox {
      * @param nextRetryAt   다음 재시도 예정 시각
      * @param status        메시지 상태 (기본값: PENDING)
      */
-    public RequestOutboxMessage(OutboxId outboxId, String aggregateType, String aggregateId, String eventType,
-            JsonPayload payload, int retryAttempts, Instant nextRetryAt, OutboxStatus status, Instant processedAt,
-            Instant createdAt) {
+    public MessageOutbox(OutboxId outboxId, String aggregateId,
+            JsonPayload payload, int retryAttempts, Instant nextRetryAt,
+            OutboxStatus status, Instant processedAt, Instant createdAt) {
         try {
             this.outboxId = Objects.requireNonNull(outboxId, "Outbox ID cannot be null");
-            this.aggregateType = Objects.requireNonNull(aggregateType, "Aggregate type cannot be null");
             this.aggregateId = Objects.requireNonNull(aggregateId, "Aggregate ID cannot be null");
-            this.eventType = Objects.requireNonNull(eventType, "Event type cannot be null");
             this.payload = Objects.requireNonNull(payload, "Payload cannot be null");
             this.retryAttempts = retryAttempts; // 재시도 횟수는 음수일 수 없음
             this.nextRetryAt = nextRetryAt; // 다음 재시도 시각은 null일 수 있음
@@ -56,7 +49,7 @@ public class RequestOutboxMessage implements Outbox {
             throw new MandatoryFieldException(e.getMessage(), e);
         }
 
-        if (nextRetryAt != null && nextRetryAt.isBefore(this.createdAt)) {
+        if (nextRetryAt != null && nextRetryAt.isBefore(Instant.now().minusSeconds(10))) {
             throw new PolicyViolationException("Next retry time cannot be before created time");
         }
 
@@ -66,22 +59,19 @@ public class RequestOutboxMessage implements Outbox {
     }
 
     /**
-     * OutboxMessage를 생성하는 정적 팩토리 메서드입니다.
+     * MessageOutbox를 생성하는 정적 팩토리 메서드입니다.
      *
-     * @param aggregateType 집계 타입 (예: NotificationRequest, NotificationMessage 등)
-     * @param aggregateId   집계 ID (예: 요청 ID, 알림 항목 ID 등)
-     * @param eventType     이벤트 타입 (예: NotificationRequestReceived 등)
-     * @param payload       JSON 페이로드
-     * @param nextRetryAt   다음 재시도 예정 시각
-     * @return 새 OutboxMessage 인스턴스
+     * @param aggregateId 집계 ID (예: 요청 ID, 알림 항목 ID 등)
+     * @param payload     JSON 페이로드
+     * @param nextRetryAt 다음 재시도 예정 시각
+     * @return 새 MessageOutbox 인스턴스
      */
-    public static RequestOutboxMessage create(String aggregateType, String aggregateId, String eventType,
-            JsonPayload payload, Instant nextRetryAt) {
-        return new RequestOutboxMessage(
+    public static MessageOutbox create(String aggregateId, JsonPayload payload, Instant nextRetryAt) {
+        return new MessageOutbox(
                 OutboxId.generate(),
-                aggregateType, aggregateId, eventType, payload,
+                aggregateId, payload,
                 0, nextRetryAt,
-                OutboxStatus.PENDING, null, Instant.now());
+                OutboxStatus.PENDING, null, null);
     }
 
     /**
@@ -90,7 +80,6 @@ public class RequestOutboxMessage implements Outbox {
      * 
      * @param nextRetryAt
      */
-    @Override
     public void markAsFailed(Instant nextRetryAt) {
         if (this.status != OutboxStatus.PENDING) {
             throw new PolicyViolationException("Cannot mark as failed when status is not PENDING");
@@ -112,7 +101,6 @@ public class RequestOutboxMessage implements Outbox {
      * @param maxRetries
      * @return
      */
-    @Override
     public boolean isMaxRetryAttemptsReached(int maxRetries) {
         if (this.status != OutboxStatus.FAILED) {
             throw new PolicyViolationException("Cannot check retry attempts unless status is FAILED");

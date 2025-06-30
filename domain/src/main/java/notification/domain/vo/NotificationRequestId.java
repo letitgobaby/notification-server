@@ -9,11 +9,11 @@ public record NotificationRequestId(String value) {
 
     public NotificationRequestId {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("NotificationRequestId cannot be null or blank");
+            throw new IllegalArgumentException("Notification request ID cannot be null or blank");
         }
     }
 
-    public static NotificationRequestId generate() {
+    public static NotificationRequestId create() {
         return new NotificationRequestId(UUID.randomUUID().toString());
     }
 

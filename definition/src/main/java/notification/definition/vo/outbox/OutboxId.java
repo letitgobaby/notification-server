@@ -1,4 +1,6 @@
-package notification.domain.vo;
+package notification.definition.vo.outbox;
+
+import java.util.UUID;
 
 import notification.definition.annotations.ValueObject;
 
@@ -12,7 +14,7 @@ public record OutboxId(String value) {
     }
 
     public static OutboxId generate() {
-        return new OutboxId(java.util.UUID.randomUUID().toString());
+        return new OutboxId(UUID.randomUUID().toString());
     }
 
 }

@@ -1,23 +1,18 @@
-package notification.domain;
+package notification.definition.vo.outbox;
 
 import java.time.Instant;
 import java.util.Objects;
 
 import lombok.Getter;
-import notification.definition.annotations.AggregateRoot;
 import notification.definition.enums.OutboxStatus;
 import notification.definition.exceptions.MandatoryFieldException;
 import notification.definition.exceptions.PolicyViolationException;
 import notification.definition.vo.JsonPayload;
-import notification.domain.vo.OutboxId;
 
-@AggregateRoot
 @Getter
-public class OutboxMessage implements Outbox {
+public class RequestOutbox {
     private final OutboxId outboxId;
-    private final String aggregateType;
     private final String aggregateId;
-    private final String eventType;
     private final JsonPayload payload;
 
     private OutboxStatus status; // 메시지 상태 (PENDING, FAILED)
@@ -27,7 +22,7 @@ public class OutboxMessage implements Outbox {
     private final Instant createdAt;
 
     /**
-     * OutboxMessage 생성자입니다.
+     * RequestOutbox 생성자입니다.
      *
      * @param outboxId      Outbox 메시지 ID
      * @param aggregateType 집계 타입 (예: NotificationRequest, NotificationMessage 등)
@@ -38,14 +33,12 @@ public class OutboxMessage implements Outbox {
      * @param nextRetryAt   다음 재시도 예정 시각
      * @param status        메시지 상태 (기본값: PENDING)
      */
-    public OutboxMessage(OutboxId outboxId, String aggregateType, String aggregateId, String eventType,
-            JsonPayload payload, int retryAttempts, Instant nextRetryAt, OutboxStatus status, Instant processedAt,
-            Instant createdAt) {
+    public RequestOutbox(OutboxId outboxId, String aggregateId,
+            JsonPayload payload, int retryAttempts, Instant nextRetryAt,
+            OutboxStatus status, Instant processedAt, Instant createdAt) {
         try {
             this.outboxId = Objects.requireNonNull(outboxId, "Outbox ID cannot be null");
-            this.aggregateType = Objects.requireNonNull(aggregateType, "Aggregate type cannot be null");
             this.aggregateId = Objects.requireNonNull(aggregateId, "Aggregate ID cannot be null");
-            this.eventType = Objects.requireNonNull(eventType, "Event type cannot be null");
             this.payload = Objects.requireNonNull(payload, "Payload cannot be null");
             this.retryAttempts = retryAttempts; // 재시도 횟수는 음수일 수 없음
             this.nextRetryAt = nextRetryAt; // 다음 재시도 시각은 null일 수 있음
@@ -56,7 +49,8 @@ public class OutboxMessage implements Outbox {
             throw new MandatoryFieldException(e.getMessage(), e);
         }
 
-        if (nextRetryAt != null && nextRetryAt.isBefore(this.createdAt)) {
+        // 10초 이전의 재시도 시각은 허용하지 않음 (버퍼 시간)
+        if (nextRetryAt != null && nextRetryAt.isBefore(Instant.now().minusSeconds(10))) {
             throw new PolicyViolationException("Next retry time cannot be before created time");
         }
 
@@ -66,22 +60,21 @@ public class OutboxMessage implements Outbox {
     }
 
     /**
-     * OutboxMessage를 생성하는 정적 팩토리 메서드입니다.
+     * MessageOutbox를 생성하는 정적 팩토리 메서드입니다.
      *
      * @param aggregateType 집계 타입 (예: NotificationRequest, NotificationMessage 등)
      * @param aggregateId   집계 ID (예: 요청 ID, 알림 항목 ID 등)
      * @param eventType     이벤트 타입 (예: NotificationRequestReceived 등)
      * @param payload       JSON 페이로드
      * @param nextRetryAt   다음 재시도 예정 시각
-     * @return 새 OutboxMessage 인스턴스
+     * @return 새 RequestOutbox 인스턴스
      */
-    public static OutboxMessage create(String aggregateType, String aggregateId, String eventType,
-            JsonPayload payload, Instant nextRetryAt) {
-        return new OutboxMessage(
+    public static RequestOutbox create(String aggregateId, JsonPayload payload, Instant nextRetryAt) {
+        return new RequestOutbox(
                 OutboxId.generate(),
-                aggregateType, aggregateId, eventType, payload,
+                aggregateId, payload,
                 0, nextRetryAt,
-                OutboxStatus.PENDING, null, Instant.now());
+                OutboxStatus.PENDING, null, null);
     }
 
     /**
@@ -90,7 +83,6 @@ public class OutboxMessage implements Outbox {
      * 
      * @param nextRetryAt
      */
-    @Override
     public void markAsFailed(Instant nextRetryAt) {
         if (this.status != OutboxStatus.PENDING) {
             throw new PolicyViolationException("Cannot mark as failed when status is not PENDING");
@@ -112,7 +104,6 @@ public class OutboxMessage implements Outbox {
      * @param maxRetries
      * @return
      */
-    @Override
     public boolean isMaxRetryAttemptsReached(int maxRetries) {
         if (this.status != OutboxStatus.FAILED) {
             throw new PolicyViolationException("Cannot check retry attempts unless status is FAILED");
@@ -127,5 +118,4 @@ public class OutboxMessage implements Outbox {
     public boolean isFailed() {
         return this.status == OutboxStatus.FAILED;
     }
-
 }
