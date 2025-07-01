@@ -1,6 +1,6 @@
 package notification.application.user.port.outbound;
 
-import notification.application.user.dto.UserConfig;
+import notification.definition.vo.UserConfig;
 import reactor.core.publisher.Mono;
 
 public interface UserConfigProviderPort {

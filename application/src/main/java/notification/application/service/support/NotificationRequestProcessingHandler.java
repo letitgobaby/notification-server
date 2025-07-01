@@ -20,7 +20,7 @@ public class NotificationRequestProcessingHandler {
 
     private final NotificationRequestRepositoryPort notificationRequestRepository;
     private final RequestOutboxRepositoryPort requestMessageOutboxRepository;
-    private final NotificationMessageComposer notificationMessageComposer;
+    private final NotificationRequestParser notificationMessageParser;
     private final NotificationMessageWithOutboxSaver notificationMessageWithOutboxSaver;
     private final MessageOutboxEventPublisherPort MessageOutboxEventPublisher;
 
@@ -37,7 +37,7 @@ public class NotificationRequestProcessingHandler {
         domain.markAsProcessing();
 
         return notificationRequestRepository.update(domain)
-                .flatMapMany(notificationMessageComposer::composeMessages)
+                .flatMapMany(notificationMessageParser::parse)
                 .flatMap(notificationMessageWithOutboxSaver::save)
                 .flatMap(this::publishMessageOutbox)
                 .collectList()

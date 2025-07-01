@@ -1,6 +1,8 @@
 package notification.application.service;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,9 +23,10 @@ import reactor.core.publisher.Mono;
 public class TemplateRenderingService implements TemplateRenderingUseCase {
 
     private final TemplateDefinitionProviderPort templateDefinitionProvider;
+    private final ConcurrentMap<String, Mono<RenderedContent>> templateCache = new ConcurrentHashMap<>();
 
     /**
-     * 템플릿을 렌더링합니다.
+     * 템플릿을 렌더링합니다. (캐싱 지원)
      * 
      * @param templateInfo 템플릿 정보
      * @param type         알림 타입
@@ -35,6 +38,23 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
         log.debug("Rendering template: {}, type : {}, language: {}",
                 templateInfo.templateId(), type.name(), language);
 
+        // 캐시 키 생성 (템플릿ID + 타입 + 언어 + 매개변수 해시)
+        String cacheKey = String.format("%s_%s_%s",
+                templateInfo.templateId(),
+                type.name(),
+                language != null ? language : "ko");
+
+        return templateCache.computeIfAbsent(cacheKey,
+                key -> renderTemplateInternal(templateInfo, type, language)
+                        .cache() // Mono 레벨에서도 캐싱
+        );
+    }
+
+    /**
+     * 실제 템플릿 렌더링 로직
+     */
+    private Mono<RenderedContent> renderTemplateInternal(
+            TemplateInfo templateInfo, NotificationType type, String language) {
         String templateId = templateInfo.templateId();
         return templateDefinitionProvider.getTemplateDefinition(templateId, type.name(), language)
                 .flatMap(definition -> {
@@ -48,6 +68,14 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
                             e.getMessage());
                     return Mono.error(new RuntimeException("Template rendering failed", e));
                 });
+    }
+
+    /**
+     * 캐시를 정리합니다. (요청 처리 완료 후 호출)
+     */
+    public void clearCache() {
+        templateCache.clear();
+        log.debug("Template rendering cache cleared");
     }
 
     /**
