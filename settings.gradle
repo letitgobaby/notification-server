@@ -21,4 +21,6 @@ include(
     'application',
     'infrastructure',
     // 'bootstrap'
+
+    'adapter:db',
 )
