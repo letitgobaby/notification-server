@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.port.outbound.persistence.NotificationMessageRepositoryPort;
-import notification.application.notifiation.port.outbound.persistence.OutboxMessageRepositoryPort;
+import notification.application.outbox.port.outbound.MessageOutboxRepositoryPort;
 import notification.definition.exceptions.Network4xxException;
+import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationMessage;
-import notification.domain.OutboxMessage;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -22,7 +22,7 @@ public class NotificationMessageExceptionHandler {
     private static final long MAX_RETRY_DELAY = 18000; // 최대 재시도
 
     private final NotificationMessageRepositoryPort notificationMessageRepository;
-    private final OutboxMessageRepositoryPort outboxMessageRepository;
+    private final MessageOutboxRepositoryPort MessageOutboxRepository;
 
     /**
      * 알림 메시지 처리 중 예외가 발생했을 때 호출되는 메서드입니다.
@@ -32,7 +32,7 @@ public class NotificationMessageExceptionHandler {
      * @param e       발생한 예외
      * @return 처리 결과
      */
-    public Mono<Void> handle(NotificationMessage message, OutboxMessage outbox, Throwable e) {
+    public Mono<Void> handle(NotificationMessage message, MessageOutbox outbox, Throwable e) {
         log.error("Error processing message: {}", outbox.getAggregateId(), e);
 
         if (e instanceof Network4xxException) {
@@ -53,7 +53,7 @@ public class NotificationMessageExceptionHandler {
         Instant nextRetryAt = Instant.now().plusSeconds(Math.min(delay, MAX_RETRY_DELAY));
 
         outbox.markAsFailed(nextRetryAt);
-        return outboxMessageRepository.update(outbox).then()
+        return MessageOutboxRepository.update(outbox).then()
                 .onErrorResume(err -> {
                     log.error("Failed to update outbox to FAILED: {}", err.getMessage(), err);
                     return Mono.empty();
@@ -68,10 +68,10 @@ public class NotificationMessageExceptionHandler {
      * @param outbox  아웃박스 메시지
      * @return 처리 결과
      */
-    private Mono<Void> handleCompletedMessage(NotificationMessage message, OutboxMessage outbox) {
+    private Mono<Void> handleCompletedMessage(NotificationMessage message, MessageOutbox outbox) {
         return Mono.zip(
                 notificationMessageRepository.update(message),
-                outboxMessageRepository.deleteById(outbox.getOutboxId())).then();
+                MessageOutboxRepository.deleteById(outbox.getOutboxId())).then();
     }
 
     private long calculateRetryDelaySeconds(int attempts) {

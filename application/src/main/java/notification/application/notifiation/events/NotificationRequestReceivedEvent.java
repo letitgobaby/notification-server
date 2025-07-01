@@ -3,15 +3,15 @@ package notification.application.notifiation.events;
 import org.springframework.context.ApplicationEvent;
 
 import lombok.Getter;
-import notification.domain.RequestOutboxMessage;
+import notification.definition.vo.outbox.RequestOutbox;
 
 @Getter
 public class NotificationRequestReceivedEvent extends ApplicationEvent {
 
-    private final RequestOutboxMessage outboxMessage;
+    private final RequestOutbox requestOutbox;
 
-    public NotificationRequestReceivedEvent(Object source, RequestOutboxMessage outboxMessage) {
+    public NotificationRequestReceivedEvent(Object source, RequestOutbox requestOutbox) {
         super(source);
-        this.outboxMessage = outboxMessage;
+        this.requestOutbox = requestOutbox;
     }
 }

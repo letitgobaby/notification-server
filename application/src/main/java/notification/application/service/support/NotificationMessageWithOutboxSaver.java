@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.common.JsonPayloadFactory;
 import notification.application.notifiation.port.outbound.persistence.NotificationMessageRepositoryPort;
-import notification.application.notifiation.port.outbound.persistence.OutboxMessageRepositoryPort;
+import notification.application.outbox.port.outbound.MessageOutboxRepositoryPort;
+import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationMessage;
-import notification.domain.OutboxMessage;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -17,26 +17,24 @@ import reactor.core.publisher.Mono;
 public class NotificationMessageWithOutboxSaver {
 
     private final NotificationMessageRepositoryPort notificationMessageRepository;
-    private final OutboxMessageRepositoryPort outboxMessageRepository;
+    private final MessageOutboxRepositoryPort MessageOutboxRepository;
     private final JsonPayloadFactory jsonPayloadFactory;
 
     /**
-     * NotificationMessage를 저장하고, OutboxMessage를 생성하여 저장합니다.
+     * NotificationMessage를 저장하고, MessageOutbox를 생성하여 저장합니다.
      *
      * @param message NotificationMessage
-     * @return OutboxMessage Mono
+     * @return MessageOutbox Mono
      */
-    public Mono<OutboxMessage> save(NotificationMessage message) {
+    public Mono<MessageOutbox> save(NotificationMessage message) {
         return notificationMessageRepository.save(message)
                 .flatMap(saved -> {
-                    OutboxMessage outboxMessage = OutboxMessage.create(
-                            saved.getClass().getSimpleName(),
-                            saved.getItemId().value(),
-                            "NotificationMessageScheduledEvent",
+                    MessageOutbox messageOutbox = MessageOutbox.create(
+                            saved.getMessageId().value(),
                             jsonPayloadFactory.toJsonPayload(saved),
                             saved.getScheduledAt());
 
-                    return outboxMessageRepository.save(outboxMessage);
+                    return MessageOutboxRepository.save(messageOutbox);
                 });
     }
 

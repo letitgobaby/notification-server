@@ -1,6 +1,6 @@
 package notification.application.notifiation.port.inbound;
 
-import notification.application.notifiation.events.NotificationRequestReceivedEvent;
+import notification.definition.vo.outbox.RequestOutbox;
 import reactor.core.publisher.Mono;
 
 public interface NotificationRequestEventProcessorUseCase {
@@ -10,6 +10,6 @@ public interface NotificationRequestEventProcessorUseCase {
      * @param eventId 이벤트 ID
      * @return Mono<Void> 성공 시 빈 Mono 반환
      */
-    Mono<Void> process(NotificationRequestReceivedEvent event);
+    Mono<Void> process(RequestOutbox outbox);
 
 }

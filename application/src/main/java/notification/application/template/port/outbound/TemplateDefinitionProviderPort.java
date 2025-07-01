@@ -1,6 +1,6 @@
 package notification.application.template.port.outbound;
 
-import notification.application.template.dto.TemplateDefinition;
+import notification.definition.vo.TemplateDefinition;
 import reactor.core.publisher.Mono;
 
 public interface TemplateDefinitionProviderPort {

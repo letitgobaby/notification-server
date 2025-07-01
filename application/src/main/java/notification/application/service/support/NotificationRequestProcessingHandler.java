@@ -7,9 +7,10 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.port.outbound.persistence.NotificationRequestRepositoryPort;
-import notification.application.notifiation.port.outbound.persistence.RequestOutboxMessageRepositoryPort;
+import notification.application.outbox.port.outbound.MessageOutboxEventPublisherPort;
+import notification.application.outbox.port.outbound.RequestOutboxRepositoryPort;
+import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationRequest;
-import notification.domain.OutboxMessage;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -18,9 +19,10 @@ import reactor.core.publisher.Mono;
 public class NotificationRequestProcessingHandler {
 
     private final NotificationRequestRepositoryPort notificationRequestRepository;
-    private final RequestOutboxMessageRepositoryPort requestOutboxMessageRepository;
+    private final RequestOutboxRepositoryPort requestMessageOutboxRepository;
     private final NotificationMessageComposer notificationMessageComposer;
     private final NotificationMessageWithOutboxSaver notificationMessageWithOutboxSaver;
+    private final MessageOutboxEventPublisherPort MessageOutboxEventPublisher;
 
     /**
      * NotificationRequest를 처리하고, 해당 요청에 대한 NotificationMessage를 생성하여 저장합니다.
@@ -28,7 +30,7 @@ public class NotificationRequestProcessingHandler {
      * @param domain NotificationRequest
      * @return Mono<Void>
      */
-    public Mono<List<OutboxMessage>> handle(NotificationRequest domain) {
+    public Mono<List<MessageOutbox>> handle(NotificationRequest domain) {
         String requestId = domain.getRequestId().value();
 
         // 알림 요청을 Processing 상태로 변경
@@ -37,8 +39,9 @@ public class NotificationRequestProcessingHandler {
         return notificationRequestRepository.update(domain)
                 .flatMapMany(notificationMessageComposer::composeMessages)
                 .flatMap(notificationMessageWithOutboxSaver::save)
+                .flatMap(this::publishMessageOutbox)
                 .collectList()
-                .doOnNext(savedList -> clearRequestOutboxMessage(requestId));
+                .doOnNext(savedList -> clearRequestMessageOutbox(requestId));
     }
 
     /**
@@ -47,14 +50,23 @@ public class NotificationRequestProcessingHandler {
      * @param requestId
      * @return
      */
-    private Mono<Void> clearRequestOutboxMessage(String requestId) {
+    private Mono<Void> clearRequestMessageOutbox(String requestId) {
         log.info("Clearing request outbox messages for requestId: {}", requestId);
 
-        return requestOutboxMessageRepository.deleteByAggregateId(requestId)
-                .doOnError(err -> {
-                    log.error("Failed to clear request outbox messages for requestId {}: {}", requestId,
-                            err.getMessage(), err);
-                });
+        return requestMessageOutboxRepository.deleteByAggregateId(requestId)
+                .doOnError(err -> log.error("Failed to clear request outbox messages for requestId {}: {}",
+                        requestId, err.getMessage(), err));
+    }
+
+    /**
+     * Outbox 메시지를 발행합니다.
+     *
+     * @param MessageOutbox 발행할 Outbox 메시지
+     * @return Mono<MessageOutbox>
+     */
+    private Mono<MessageOutbox> publishMessageOutbox(MessageOutbox MessageOutbox) {
+        return MessageOutboxEventPublisher.publish(MessageOutbox)
+                .thenReturn(MessageOutbox);
     }
 
 }

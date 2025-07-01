@@ -1,17 +1,18 @@
-package notification.application.notifiation.port.outbound.persistence;
+package notification.application.outbox.port.outbound;
 
-import notification.domain.OutboxMessage;
-import notification.domain.vo.OutboxId;
+import notification.definition.vo.outbox.MessageOutbox;
+import notification.definition.vo.outbox.OutboxId;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface OutboxMessageRepositoryPort {
+public interface MessageOutboxRepositoryPort {
     /**
      * Saves the outbox message to the repository.
      *
-     * @param outboxMessage the outbox message to save
+     * @param MessageOutbox the outbox message to save
      * @return the saved outbox message
      */
-    Mono<OutboxMessage> save(OutboxMessage domain);
+    Mono<MessageOutbox> save(MessageOutbox domain);
 
     /**
      * Updates the outbox message in the repository.
@@ -19,7 +20,7 @@ public interface OutboxMessageRepositoryPort {
      * @param domain the outbox message to update
      * @return the updated outbox message
      */
-    Mono<OutboxMessage> update(OutboxMessage domain);
+    Mono<MessageOutbox> update(MessageOutbox domain);
 
     /**
      * Finds an outbox message by its ID.
@@ -27,7 +28,7 @@ public interface OutboxMessageRepositoryPort {
      * @param id the ID of the outbox message
      * @return the found outbox message, or null if not found
      */
-    Mono<OutboxMessage> findById(OutboxId id);
+    Mono<MessageOutbox> findById(OutboxId id);
 
     /**
      * Deletes an outbox message by its aggregate ID.
@@ -43,5 +44,13 @@ public interface OutboxMessageRepositoryPort {
      * @param id the ID of the outbox message to delete
      */
     Mono<Void> deleteById(OutboxId id);
+
+    /**
+     * Finds all outbox messages with the specified status.
+     *
+     * @param status the status of the outbox messages to find
+     * @return a Flux of outbox messages matching the status
+     */
+    Flux<MessageOutbox> findPendingAndFailedMessages();
 
 }

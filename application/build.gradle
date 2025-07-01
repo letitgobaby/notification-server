@@ -9,4 +9,6 @@ dependencies {
     implementation project(':definition')
     implementation project(':domain')
 
+    implementation 'org.springframework:spring-tx'
+
 }

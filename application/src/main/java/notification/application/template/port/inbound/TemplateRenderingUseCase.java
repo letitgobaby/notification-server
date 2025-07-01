@@ -1,7 +1,7 @@
 package notification.application.template.port.inbound;
 
-import notification.definition.enums.NotificationType;
-import notification.domain.vo.RenderedContent;
+import notification.definition.vo.RenderedContent;
+import notification.domain.enums.NotificationType;
 import notification.domain.vo.TemplateInfo;
 import reactor.core.publisher.Mono;
 

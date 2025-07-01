@@ -1,16 +1,14 @@
 package notification.application.service.support;
 
-import java.time.Instant;
-
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.port.outbound.message.NotificationMessagePublishPort;
 import notification.application.notifiation.port.outbound.persistence.NotificationMessageRepositoryPort;
-import notification.application.notifiation.port.outbound.persistence.OutboxMessageRepositoryPort;
+import notification.application.outbox.port.outbound.MessageOutboxRepositoryPort;
+import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationMessage;
-import notification.domain.OutboxMessage;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -19,7 +17,7 @@ import reactor.core.publisher.Mono;
 public class NotificationMessageDispatchHandler {
 
     private final NotificationMessageRepositoryPort notificationMessageRepository;
-    private final OutboxMessageRepositoryPort outboxMessageRepository;
+    private final MessageOutboxRepositoryPort MessageOutboxRepository;
     private final NotificationMessagePublishPort notificationMessagePublish;
 
     /**
@@ -29,10 +27,11 @@ public class NotificationMessageDispatchHandler {
      * @param outbox  아웃박스 메시지
      * @return Mono<Void>
      */
-    public Mono<Void> handle(NotificationMessage message, OutboxMessage outbox) {
+    public Mono<Void> handle(NotificationMessage message, MessageOutbox outbox) {
         return notificationMessagePublish.publish(message).flatMap(v -> {
+
             // 메시지 발행이 성공하면 알림 메시지를 DISPATCHED 상태로 업데이트합니다.
-            message.markAsDispatched(Instant.now());
+            message.markAsDispatched();
 
             return handleCompletedMessage(message, outbox);
         });
@@ -45,10 +44,10 @@ public class NotificationMessageDispatchHandler {
      * @param outbox  아웃박스 메시지
      * @return Mono<Void>
      */
-    private Mono<Void> handleCompletedMessage(NotificationMessage message, OutboxMessage outbox) {
+    private Mono<Void> handleCompletedMessage(NotificationMessage message, MessageOutbox outbox) {
         return Mono.zip(
                 notificationMessageRepository.update(message),
-                outboxMessageRepository.deleteById(outbox.getOutboxId()))
+                MessageOutboxRepository.deleteById(outbox.getOutboxId()))
                 .then();
     }
 

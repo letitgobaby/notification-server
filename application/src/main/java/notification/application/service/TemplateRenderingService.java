@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.template.port.inbound.TemplateRenderingUseCase;
 import notification.application.template.port.outbound.TemplateDefinitionProviderPort;
-import notification.definition.enums.NotificationType;
-import notification.domain.vo.RenderedContent;
+import notification.definition.vo.RenderedContent;
+import notification.domain.enums.NotificationType;
 import notification.domain.vo.TemplateInfo;
 import reactor.core.publisher.Mono;
 
@@ -35,14 +35,14 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
         log.debug("Rendering template: {}, type : {}, language: {}",
                 templateInfo.templateId(), type.name(), language);
 
-        String templateId = templateInfo.templateId().value();
+        String templateId = templateInfo.templateId();
         return templateDefinitionProvider.getTemplateDefinition(templateId, type.name(), language)
                 .flatMap(definition -> {
                     return Mono.just(new RenderedContent(
-                            bindParameters(definition.titleTemplate(), templateInfo.templateParameters()),
-                            bindParameters(definition.bodyTemplate(), templateInfo.templateParameters()),
+                            bindParameters(definition.titleTemplate(), templateInfo.parameters()),
+                            bindParameters(definition.bodyTemplate(), templateInfo.parameters()),
                             definition.language(),
-                            null));
+                            templateId));
                 }).onErrorResume(e -> {
                     log.error("Failed to render template: {}, language: {}, error: {}", templateId, language,
                             e.getMessage());
