@@ -1,8 +1,11 @@
 package notification.domain;
 
 import java.time.Instant;
+import java.util.Objects;
 
+import lombok.Getter;
 import notification.definition.annotations.AggregateRoot;
+import notification.definition.exceptions.MandatoryFieldException;
 import notification.domain.enums.DeliveryStatus;
 import notification.domain.enums.NotificationType;
 import notification.domain.vo.NotificationContent;
@@ -11,6 +14,7 @@ import notification.domain.vo.NotificationRequestId;
 import notification.domain.vo.recipient.Recipient;
 import notification.domain.vo.sender.SenderInfo;
 
+@Getter
 @AggregateRoot
 public class NotificationMessage {
     private final NotificationMessageId messageId;
@@ -41,20 +45,26 @@ public class NotificationMessage {
      * @param createdAt           생성 시간
      */
     public NotificationMessage(NotificationMessageId messageId, NotificationRequestId requestId,
-            NotificationType notificationType, Recipient recipient, NotificationContent notificationContent,
+            NotificationType notificationType, Recipient recipient, NotificationContent content,
             SenderInfo senderInfo, DeliveryStatus deliveryStatus, Instant scheduledAt, Instant dispatchedAt,
             String failureReason, Instant createdAt) {
-        this.messageId = messageId;
-        this.requestId = requestId;
-        this.notificationType = notificationType;
-        this.recipient = recipient;
-        this.notificationContent = notificationContent;
-        this.senderInfo = senderInfo;
-        this.deliveryStatus = deliveryStatus;
-        this.scheduledAt = scheduledAt; // 스케줄링 시간은 현재 시각으로 초기화
-        this.dispatchedAt = dispatchedAt; // 발송 시스템에 전달된 시간
-        this.failureReason = failureReason; // 실패 사유는 null일 수 있음
-        this.createdAt = createdAt;
+
+        try {
+            this.messageId = Objects.requireNonNull(messageId, "Notification message ID cannot be null");
+            this.requestId = Objects.requireNonNull(requestId, "Notification request ID cannot be null");
+            this.notificationType = Objects.requireNonNull(notificationType, "Notification type cannot be null");
+            this.recipient = Objects.requireNonNull(recipient, "Recipient cannot be null");
+            this.notificationContent = Objects.requireNonNull(content, "Notification content cannot be null");
+            this.senderInfo = Objects.requireNonNull(senderInfo, "Sender info cannot be null");
+            this.deliveryStatus = Objects.requireNonNull(deliveryStatus, "Delivery status cannot be null");
+            this.deliveryStatus = deliveryStatus;
+            this.scheduledAt = scheduledAt; // 스케줄링 시간은 현재 시각으로 초기화
+            this.dispatchedAt = dispatchedAt; // 발송 시스템에 전달된 시간
+            this.failureReason = failureReason; // 실패 사유는 null일 수 있음
+            this.createdAt = createdAt;
+        } catch (NullPointerException e) {
+            throw new MandatoryFieldException("Mandatory fields cannot be null", e);
+        }
     }
 
     /**

@@ -3,12 +3,13 @@ package notification.domain.vo;
 import java.util.UUID;
 
 import notification.definition.annotations.ValueObject;
+import notification.definition.exceptions.MandatoryFieldException;
 
 @ValueObject
 public record NotificationMessageId(String value) {
     public NotificationMessageId {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Notification message ID cannot be null or blank");
+            throw new MandatoryFieldException("Notification message ID cannot be null or blank");
         }
     }
 
