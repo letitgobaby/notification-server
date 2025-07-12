@@ -24,6 +24,7 @@ import notification.domain.vo.sender.EmailSender;
 import notification.domain.vo.sender.PushSender;
 import notification.domain.vo.sender.SenderInfo;
 
+@DisplayName("NotificationRequest 도메인 테스트")
 public class NotificationRequestTest {
 
     private Requester requester;
@@ -220,7 +221,8 @@ public class NotificationRequestTest {
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
                 request::markAsCanceled);
-        assertEquals("Cannot mark as cancelled when status is not PENDING or PROCESSING", exception.getMessage());
+        assertEquals("Cannot mark as cancelled when status is not PENDING or PROCESSING",
+                exception.getMessage());
     }
 
     @Test

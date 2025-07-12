@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import lombok.Getter;
 import notification.definition.annotations.AggregateRoot;
+import notification.definition.exceptions.BusinessRuleViolationException;
 import notification.definition.exceptions.MandatoryFieldException;
 import notification.domain.enums.NotificationType;
 import notification.domain.enums.RequestStatus;
@@ -33,7 +34,7 @@ public class NotificationRequest {
     private RequestStatus status;
     private String failureReason; // 요청 처리 중 실패 사유
     private Instant processedAt; // 요청이 처리된 시각 (성공/실패 여부와 관계없이)
-    private Instant createdAt;
+    private Instant createdAt; // 영속화된 시각
 
     /**
      * NotificationRequest 생성자입니다.
@@ -63,17 +64,32 @@ public class NotificationRequest {
             this.recipients = Objects.requireNonNull(recipients, "Recipients cannot be null");
             this.notificationTypes = Objects.requireNonNull(notificationTypes, "Notification types cannot be null");
             this.senderInfos = Objects.requireNonNull(senderInfos, "Sender infos cannot be null");
-            this.content = Objects.requireNonNull(content, "Notification content cannot be null");
-            this.template = Objects.requireNonNull(template, "Template cannot be null");
+            this.content = content;
+            this.template = template;
             this.status = Objects.requireNonNull(status, "Request status cannot be null");
             this.scheduledAt = scheduledAt;
             this.memo = memo;
             this.failureReason = failureReason;
             this.processedAt = processedAt;
             this.createdAt = createdAt;
-
         } catch (NullPointerException e) {
             throw new MandatoryFieldException("Mandatory fields cannot be null", e);
+        }
+
+        if (recipients.isEmpty()) {
+            throw new BusinessRuleViolationException("Recipients cannot be empty");
+        }
+
+        if (notificationTypes.isEmpty()) {
+            throw new BusinessRuleViolationException("Notification types cannot be empty");
+        }
+
+        if (senderInfos.isEmpty()) {
+            throw new BusinessRuleViolationException("Sender infos cannot be empty");
+        }
+
+        if (content == null && template == null) {
+            throw new BusinessRuleViolationException("At least one of content or template must be provided");
         }
     }
 

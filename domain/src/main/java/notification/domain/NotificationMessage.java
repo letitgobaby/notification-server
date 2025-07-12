@@ -63,7 +63,7 @@ public class NotificationMessage {
             this.failureReason = failureReason; // 실패 사유는 null일 수 있음
             this.createdAt = createdAt;
         } catch (NullPointerException e) {
-            throw new MandatoryFieldException("Mandatory fields cannot be null", e);
+            throw new MandatoryFieldException(e.getMessage());
         }
     }
 

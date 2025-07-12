@@ -17,7 +17,7 @@ import notification.domain.vo.recipient.Recipient;
 import notification.domain.vo.sender.SenderInfo;
 import notification.domain.vo.sender.SmsSender;
 
-@DisplayName("NotificationMessage 테스트")
+@DisplayName("NotificationMessage 도메인 테스트")
 public class NotificationMessageTest {
 
     private NotificationRequestId requestId;
@@ -33,7 +33,7 @@ public class NotificationMessageTest {
         notificationType = NotificationType.SMS;
         recipient = new Recipient("user123", "test@example.com", "01012345678", "device-token", "ko");
         notificationContent = new NotificationContent("제목", "내용", "https://example.com", "https://image.com");
-        senderInfo = new SmsSender("01000000000", "테스트 발신자");
+        senderInfo = new SmsSender("sender-id-1", "01000000000", "테스트 발신자");
         scheduledAt = Instant.now().plusSeconds(3600);
     }
 
@@ -218,17 +218,20 @@ public class NotificationMessageTest {
     void create_withDifferentNotificationTypes() {
         // SMS
         NotificationMessage smsMessage = NotificationMessage.create(
-                requestId, NotificationType.SMS, recipient, notificationContent, senderInfo, scheduledAt);
+                requestId, NotificationType.SMS, recipient, notificationContent, senderInfo,
+                scheduledAt);
         assertEquals(NotificationType.SMS, smsMessage.getNotificationType());
 
         // EMAIL
         NotificationMessage emailMessage = NotificationMessage.create(
-                requestId, NotificationType.EMAIL, recipient, notificationContent, senderInfo, scheduledAt);
+                requestId, NotificationType.EMAIL, recipient, notificationContent, senderInfo,
+                scheduledAt);
         assertEquals(NotificationType.EMAIL, emailMessage.getNotificationType());
 
         // PUSH
         NotificationMessage pushMessage = NotificationMessage.create(
-                requestId, NotificationType.PUSH, recipient, notificationContent, senderInfo, scheduledAt);
+                requestId, NotificationType.PUSH, recipient, notificationContent, senderInfo,
+                scheduledAt);
         assertEquals(NotificationType.PUSH, pushMessage.getNotificationType());
     }
 
