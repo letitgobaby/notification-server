@@ -36,7 +36,7 @@ public class NotificationRequestProcessingHandler {
         // 알림 요청을 Processing 상태로 변경
         domain.markAsProcessing();
 
-        return notificationRequestRepository.update(domain)
+        return notificationRequestRepository.save(domain)
                 .flatMapMany(notificationMessageParser::parse)
                 .flatMap(notificationMessageWithOutboxSaver::save)
                 .flatMap(this::publishMessageOutbox)

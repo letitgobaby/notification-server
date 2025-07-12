@@ -30,7 +30,7 @@ import notification.domain.vo.sender.SmsSender;
 import reactor.core.publisher.Mono;
 
 @Component
-public class NotificationRequestMapper {
+public class NotificationRequestCommandMapper {
 
     /**
      * NotificationRequestCommand를 NotificationRequest 도메인 객체로 변환합니다.
@@ -65,7 +65,7 @@ public class NotificationRequestMapper {
             return List.of();
         }
 
-        if (recipientsCommand.allUsers()) {
+        if (recipientsCommand.allUsers() != null && recipientsCommand.allUsers()) {
             return List.of(new AllUserRecipient());
         }
 
@@ -74,14 +74,13 @@ public class NotificationRequestMapper {
         }
 
         List<RecipientReference> recipients = new ArrayList<>();
-        if (!recipientsCommand.userIds().isEmpty()) {
+        if (recipientsCommand.userIds() != null && !recipientsCommand.userIds().isEmpty()) {
             recipients.addAll(recipientsCommand.userIds().stream()
-                    .map(UserId::new)
-                    .map(UserRecipient::new)
+                    .map(userId -> new UserRecipient(new UserId(userId)))
                     .toList());
         }
 
-        if (!recipientsCommand.directRecipients().isEmpty()) {
+        if (recipientsCommand.directRecipients() != null && !recipientsCommand.directRecipients().isEmpty()) {
             recipients.addAll(recipientsCommand.directRecipients().stream()
                     .map(this::mapDirectRecipient)
                     .toList());
@@ -142,6 +141,10 @@ public class NotificationRequestMapper {
      * @return 템플릿 정보 도메인 객체
      */
     private TemplateInfo templateFromCommand(NotificationRequestCommand command) {
+        if (command.template() == null) {
+            return null; // 또는 기본값을 반환할 수 있음
+        }
+
         return new TemplateInfo(command.template().templateId(), command.template().templateParameters());
     }
 
@@ -165,7 +168,7 @@ public class NotificationRequestMapper {
         if (command == null) {
             return null; // 또는 기본값을 반환할 수 있음
         }
-        return new DirectRecipient(command.phoneNumber(), command.email(), command.deviceToken());
+        return new DirectRecipient(command.email(), command.phoneNumber(), command.deviceToken());
     }
 
 }

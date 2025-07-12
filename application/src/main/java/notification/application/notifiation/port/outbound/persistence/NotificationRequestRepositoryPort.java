@@ -18,13 +18,6 @@ public interface NotificationRequestRepositoryPort {
 
     /**
      * 
-     * @param domain
-     * @return NotificationRequest
-     */
-    Mono<NotificationRequest> update(NotificationRequest domain);
-
-    /**
-     * 
      * @param notificationId
      * @return NotificationRequest
      */

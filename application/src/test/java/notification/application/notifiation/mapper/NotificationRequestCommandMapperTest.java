@@ -29,13 +29,13 @@ import notification.domain.vo.sender.PushSender;
 import notification.domain.vo.sender.SmsSender;
 import reactor.test.StepVerifier;
 
-class NotificationRequestMapperTest {
+class NotificationRequestCommandMapperTest {
 
-    private NotificationRequestMapper mapper;
+    private NotificationRequestCommandMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new NotificationRequestMapper();
+        mapper = new NotificationRequestCommandMapper();
     }
 
     @Nested
@@ -61,12 +61,15 @@ class NotificationRequestMapperTest {
             StepVerifier.create(mapper.fromCommand(command))
                     .assertNext(request -> {
                         assertThat(request).isNotNull();
-                        assertThat(request.getRequester().type()).isEqualTo(RequesterType.SERVICE);
+                        assertThat(request.getRequester().type())
+                                .isEqualTo(RequesterType.SERVICE);
                         assertThat(request.getRequester().id()).isEqualTo("marketing-service");
 
                         assertThat(request.getRecipients()).hasSize(2);
-                        assertThat(request.getRecipients().get(0)).isInstanceOf(UserRecipient.class);
-                        assertThat(request.getRecipients().get(1)).isInstanceOf(UserRecipient.class);
+                        assertThat(request.getRecipients().get(0))
+                                .isInstanceOf(UserRecipient.class);
+                        assertThat(request.getRecipients().get(1))
+                                .isInstanceOf(UserRecipient.class);
 
                         assertThat(request.getNotificationTypes()).containsExactly(
                                 NotificationType.EMAIL, NotificationType.PUSH);
@@ -78,7 +81,8 @@ class NotificationRequestMapperTest {
                                 .isInstanceOf(PushSender.class);
 
                         assertThat(request.getTemplate()).isNotNull();
-                        assertThat(request.getTemplate().templateId()).isEqualTo("WELCOME_EMAIL");
+                        assertThat(request.getTemplate().templateId())
+                                .isEqualTo("WELCOME_EMAIL");
 
                         assertThat(request.getMemo()).isEqualTo("신규 사용자 환영 이메일");
                     })
@@ -95,17 +99,22 @@ class NotificationRequestMapperTest {
             StepVerifier.create(mapper.fromCommand(command))
                     .assertNext(request -> {
                         assertThat(request).isNotNull();
-                        assertThat(request.getRequester().type()).isEqualTo(RequesterType.ADMIN);
+                        assertThat(request.getRequester().type())
+                                .isEqualTo(RequesterType.ADMIN);
 
                         assertThat(request.getRecipients()).hasSize(2);
-                        assertThat(request.getRecipients().get(0)).isInstanceOf(DirectRecipient.class);
-                        assertThat(request.getRecipients().get(1)).isInstanceOf(DirectRecipient.class);
+                        assertThat(request.getRecipients().get(0))
+                                .isInstanceOf(DirectRecipient.class);
+                        assertThat(request.getRecipients().get(1))
+                                .isInstanceOf(DirectRecipient.class);
 
                         var directRecipient1 = (DirectRecipient) request.getRecipients().get(0);
-                        assertThat(directRecipient1.emailAddress()).isEqualTo("user@example.com");
+                        assertThat(directRecipient1.emailAddress())
+                                .isEqualTo("user@example.com");
                         assertThat(directRecipient1.phoneNumber()).isEqualTo("010-1234-5678");
 
-                        assertThat(request.getNotificationTypes()).containsExactly(NotificationType.SMS);
+                        assertThat(request.getNotificationTypes())
+                                .containsExactly(NotificationType.SMS);
 
                         assertThat(request.getSenderInfos().get(NotificationType.SMS))
                                 .isInstanceOf(SmsSender.class);
@@ -127,7 +136,8 @@ class NotificationRequestMapperTest {
             StepVerifier.create(mapper.fromCommand(command))
                     .assertNext(request -> {
                         assertThat(request.getRecipients()).hasSize(1);
-                        assertThat(request.getRecipients().get(0)).isInstanceOf(AllUserRecipient.class);
+                        assertThat(request.getRecipients().get(0))
+                                .isInstanceOf(AllUserRecipient.class);
                     })
                     .verifyComplete();
         }
@@ -142,9 +152,11 @@ class NotificationRequestMapperTest {
             StepVerifier.create(mapper.fromCommand(command))
                     .assertNext(request -> {
                         assertThat(request.getRecipients()).hasSize(1);
-                        assertThat(request.getRecipients().get(0)).isInstanceOf(SegmentRecipient.class);
+                        assertThat(request.getRecipients().get(0))
+                                .isInstanceOf(SegmentRecipient.class);
 
-                        var segmentRecipient = (SegmentRecipient) request.getRecipients().get(0);
+                        var segmentRecipient = (SegmentRecipient) request.getRecipients()
+                                .get(0);
                         assertThat(segmentRecipient.segmentName()).isEqualTo("VIP_CUSTOMERS");
                     })
                     .verifyComplete();
@@ -193,8 +205,10 @@ class NotificationRequestMapperTest {
                 new RecipientsCommand(
                         null,
                         List.of(
-                                new DirectRecipientCommand("010-1234-5678", "user@example.com", null),
-                                new DirectRecipientCommand("010-9876-5432", "admin@example.com", null)),
+                                new DirectRecipientCommand("010-1234-5678",
+                                        "user@example.com", null),
+                                new DirectRecipientCommand("010-9876-5432",
+                                        "admin@example.com", null)),
                         null,
                         null),
                 List.of(NotificationType.SMS),

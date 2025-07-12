@@ -6,10 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.dto.NotificationRequestCommand;
 import notification.application.notifiation.dto.NotificationRequestResult;
-import notification.application.notifiation.mapper.NotificationRequestMapper;
+import notification.application.notifiation.mapper.NotificationRequestCommandMapper;
 import notification.application.notifiation.port.inbound.NotificationRequestReceviedUseCase;
 import notification.application.outbox.port.outbound.RequestOutboxEventPublisherPort;
 import notification.application.service.support.NotificationRequestWithOutboxSaver;
+import notification.definition.annotations.Idempotent;
 import notification.definition.annotations.UnitOfWork;
 import reactor.core.publisher.Mono;
 
@@ -19,7 +20,7 @@ import reactor.core.publisher.Mono;
 public class NotificationRequestReceviedService implements NotificationRequestReceviedUseCase {
 
     private final NotificationRequestWithOutboxSaver notificationRequestWithOutboxSaver;
-    private final NotificationRequestMapper notificationRequestMapper;
+    private final NotificationRequestCommandMapper notificationRequestMapper;
     private final RequestOutboxEventPublisherPort requestOutboxEventPublisher;
 
     /**
@@ -33,6 +34,7 @@ public class NotificationRequestReceviedService implements NotificationRequestRe
      * @return Mono<NotificationRequestResult>
      */
     @UnitOfWork
+    @Idempotent(argKey = "idempotencyKey", operationType = "NOTIFICATION_REQUEST_RECEIVED")
     @Override
     public Mono<NotificationRequestResult> handle(NotificationRequestCommand command, String idempotencyKey) {
         log.info("Handling notification request: {}", command);

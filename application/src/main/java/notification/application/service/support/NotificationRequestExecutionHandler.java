@@ -108,7 +108,7 @@ public class NotificationRequestExecutionHandler {
 
     private Mono<Void> clearOutbox(RequestOutbox outbox, NotificationRequest domain) {
         return requestMessageOutboxRepository.deleteById(outbox.getOutboxId())
-                .then(notificationRequestRepository.update(domain))
+                .then(notificationRequestRepository.save(domain))
                 .doOnError(err -> log.error("Failed to clear outbox message: {}", err.getMessage(), err))
                 .onErrorResume(err -> Mono.empty())
                 .then(Mono.empty());
