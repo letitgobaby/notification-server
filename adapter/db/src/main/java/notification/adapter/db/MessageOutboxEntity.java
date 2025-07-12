@@ -2,7 +2,6 @@ package notification.adapter.db;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
@@ -18,7 +17,6 @@ import notification.definition.vo.outbox.MessageOutbox;
 import notification.definition.vo.outbox.OutboxId;
 
 @Getter
-@Builder
 @Table("message_outbox")
 public class MessageOutboxEntity implements Persistable<String> {
 
@@ -44,9 +42,22 @@ public class MessageOutboxEntity implements Persistable<String> {
     @Column("next_retry_at")
     private LocalDateTime nextRetryAt; // 다음 재시도 예정 시각 == 알림 발송 시각
 
-    @CreatedDate
     @Column("created_at")
     private LocalDateTime createdAt;
+
+    @Builder
+    public MessageOutboxEntity(String outboxId, String aggregateId, String payload, String status,
+            LocalDateTime processedAt, int retryAttempts, LocalDateTime nextRetryAt,
+            LocalDateTime createdAt) {
+        this.outboxId = outboxId;
+        this.aggregateId = aggregateId;
+        this.payload = payload;
+        this.status = status;
+        this.processedAt = processedAt;
+        this.retryAttempts = retryAttempts;
+        this.nextRetryAt = nextRetryAt;
+        this.createdAt = createdAt;
+    }
 
     public MessageOutbox toDomain() {
         return new MessageOutbox(
@@ -82,6 +93,11 @@ public class MessageOutboxEntity implements Persistable<String> {
     @Override
     public boolean isNew() {
         // 새 엔티티인지 여부를 판단하기 위해 createdAt이 null인지 확인
-        return this.createdAt == null;
+        boolean isNew = this.createdAt == null;
+        if (isNew) {
+            // 새 엔티티인 경우 createdAt을 현재 시간으로 설정
+            this.createdAt = LocalDateTime.now();
+        }
+        return isNew;
     }
 }

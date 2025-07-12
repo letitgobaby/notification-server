@@ -7,7 +7,9 @@ jar { enabled = true }
 
 dependencies {
     implementation project(':definition')
+    implementation project(':domain')
     implementation project(':application')
+    implementation project(':infrastructure')
 
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     runtimeOnly 'org.mariadb:r2dbc-mariadb'

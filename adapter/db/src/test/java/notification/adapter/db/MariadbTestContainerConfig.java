@@ -9,6 +9,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public class MariadbTestContainerConfig {
 
+    @SuppressWarnings("resource")
     @Container
     protected static final MariaDBContainer<?> MARIADB_CONTAINER = new MariaDBContainer<>("mariadb:10.5")
             .withDatabaseName("test-db")

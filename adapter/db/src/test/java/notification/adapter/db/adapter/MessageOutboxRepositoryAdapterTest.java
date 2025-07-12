@@ -19,7 +19,7 @@ import notification.definition.vo.outbox.MessageOutbox;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
-@Import(MessageOutboxRepositoryAdapter.class)
+@Import({ MessageOutboxRepositoryAdapter.class })
 public class MessageOutboxRepositoryAdapterTest extends MariadbTestContainerConfig {
 
     @Autowired

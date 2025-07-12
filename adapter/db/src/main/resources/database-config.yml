@@ -1,8 +1,12 @@
 spring:
-  datasource:
+  r2dbc:
     url: r2dbc:mariadb://localhost:3306/notification
     username: user
     password: password
+  # datasource:
+  #   url: r2dbc:mariadb://localhost:3306/notification
+  #   username: user
+  #   password: password
 
   flyway:
     enabled: true

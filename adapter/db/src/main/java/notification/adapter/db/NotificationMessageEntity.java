@@ -1,6 +1,6 @@
 package notification.adapter.db;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
@@ -12,7 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder
+// @Builder
 @Table("notification_message")
 public class NotificationMessageEntity implements Persistable<String> {
 
@@ -43,6 +43,9 @@ public class NotificationMessageEntity implements Persistable<String> {
     private String language;
 
     // 발신자 정보
+    @Column("sender_id")
+    private String senderId;
+
     @Column("sender_phone_number")
     private String senderPhoneNumber;
 
@@ -70,16 +73,49 @@ public class NotificationMessageEntity implements Persistable<String> {
     private String deliveryStatus;
 
     @Column("scheduled_at")
-    private Instant scheduledAt;
+    private LocalDateTime scheduledAt;
 
     @Column("dispatched_at")
-    private Instant dispatchedAt;
+    private LocalDateTime dispatchedAt;
 
     @Column("failure_reason")
     private String failureReason;
 
     @Column("created_at")
-    private Instant createdAt;
+    private LocalDateTime createdAt;
+
+    @Builder
+    public NotificationMessageEntity(String messageId, String requestId, String notificationType,
+            String userId, String phoneNumber, String email,
+            String deviceToken, String language,
+            String senderId, String senderPhoneNumber,
+            String senderEmailAddress, String senderName,
+            String title, String body, String redirectUrl,
+            String imageUrl, String deliveryStatus,
+            LocalDateTime scheduledAt, LocalDateTime dispatchedAt,
+            String failureReason, LocalDateTime createdAt) {
+        this.messageId = messageId;
+        this.requestId = requestId;
+        this.notificationType = notificationType;
+        this.userId = userId;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.deviceToken = deviceToken;
+        this.language = language;
+        this.senderId = senderId;
+        this.senderPhoneNumber = senderPhoneNumber;
+        this.senderEmailAddress = senderEmailAddress;
+        this.senderName = senderName;
+        this.title = title;
+        this.body = body;
+        this.redirectUrl = redirectUrl;
+        this.imageUrl = imageUrl;
+        this.deliveryStatus = deliveryStatus;
+        this.scheduledAt = scheduledAt;
+        this.dispatchedAt = dispatchedAt;
+        this.failureReason = failureReason;
+        this.createdAt = createdAt;
+    }
 
     @Override
     @Nullable
@@ -89,7 +125,13 @@ public class NotificationMessageEntity implements Persistable<String> {
 
     @Override
     public boolean isNew() {
-        return this.createdAt == null; // 새로 생성된 경우 createdAt이 null
+        // 새 엔티티인지 여부를 판단하기 위해 createdAt이 null인지 확인
+        boolean isNew = this.createdAt == null;
+        if (isNew) {
+            // 새 엔티티인 경우 createdAt을 현재 시간으로 설정
+            this.createdAt = LocalDateTime.now();
+        }
+        return isNew;
     }
 
 }

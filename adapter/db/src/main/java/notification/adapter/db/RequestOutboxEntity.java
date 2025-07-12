@@ -18,7 +18,6 @@ import notification.definition.vo.outbox.OutboxId;
 import notification.definition.vo.outbox.RequestOutbox;
 
 @Getter
-@Builder
 @Table("request_outbox")
 public class RequestOutboxEntity implements Persistable<String> {
 
@@ -47,6 +46,20 @@ public class RequestOutboxEntity implements Persistable<String> {
     @CreatedDate
     @Column("created_at")
     private LocalDateTime createdAt;
+
+    @Builder
+    public RequestOutboxEntity(String outboxId, String aggregateId, String payload, String status,
+            LocalDateTime processedAt, int retryAttempts, LocalDateTime nextRetryAt,
+            LocalDateTime createdAt) {
+        this.outboxId = outboxId;
+        this.aggregateId = aggregateId;
+        this.payload = payload;
+        this.status = status;
+        this.processedAt = processedAt;
+        this.retryAttempts = retryAttempts;
+        this.nextRetryAt = nextRetryAt;
+        this.createdAt = createdAt;
+    }
 
     public static RequestOutboxEntity fromDomain(RequestOutbox domain) {
         return RequestOutboxEntity.builder()
@@ -82,7 +95,12 @@ public class RequestOutboxEntity implements Persistable<String> {
     @Override
     public boolean isNew() {
         // 새 엔티티인지 여부를 판단하기 위해 createdAt이 null인지 확인
-        return this.createdAt == null;
+        boolean isNew = this.createdAt == null;
+        if (isNew) {
+            // 새 엔티티인 경우 createdAt을 현재 시간으로 설정
+            this.createdAt = LocalDateTime.now();
+        }
+        return isNew;
     }
 
 }
