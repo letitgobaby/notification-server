@@ -6,9 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 이 어노테이션은 메서드가 멱등성을 보장해야 함을 나타냅니다.
- * 이 어노테이션이 붙은 메서드는 멱등성 Aspect에 의해 가로채져
- * 중복 요청이 실제 비즈니스 로직을 여러 번 실행하는 것을 방지합니다.
+ * 멱등성 작업을 나타내는 어노테이션입니다.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

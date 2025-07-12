@@ -4,12 +4,14 @@ import java.time.Instant;
 import java.util.Objects;
 
 import lombok.Getter;
+import notification.definition.annotations.AggregateRoot;
 import notification.definition.enums.OutboxStatus;
+import notification.definition.exceptions.BusinessRuleViolationException;
 import notification.definition.exceptions.MandatoryFieldException;
-import notification.definition.exceptions.PolicyViolationException;
 import notification.definition.vo.JsonPayload;
 
 @Getter
+@AggregateRoot
 public class MessageOutbox {
     private final OutboxId outboxId;
     private final String aggregateId;
@@ -50,11 +52,11 @@ public class MessageOutbox {
         }
 
         if (nextRetryAt != null && nextRetryAt.isBefore(Instant.now().minusSeconds(10))) {
-            throw new PolicyViolationException("Next retry time cannot be before created time");
+            throw new BusinessRuleViolationException("Next retry time cannot be before created time");
         }
 
         if (retryAttempts < 0) {
-            throw new PolicyViolationException("Retry attempts cannot be negative");
+            throw new BusinessRuleViolationException("Retry attempts cannot be negative");
         }
     }
 
@@ -82,11 +84,11 @@ public class MessageOutbox {
      */
     public void markAsFailed(Instant nextRetryAt) {
         if (this.status != OutboxStatus.PENDING) {
-            throw new PolicyViolationException("Cannot mark as failed when status is not PENDING");
+            throw new BusinessRuleViolationException("Cannot mark as failed when status is not PENDING");
         }
 
         if (nextRetryAt == null || nextRetryAt.isBefore(Instant.now())) {
-            throw new PolicyViolationException("Next retry time must be in the future");
+            throw new BusinessRuleViolationException("Next retry time must be in the future");
         }
 
         this.status = OutboxStatus.FAILED;
@@ -103,7 +105,7 @@ public class MessageOutbox {
      */
     public boolean isMaxRetryAttemptsReached(int maxRetries) {
         if (this.status != OutboxStatus.FAILED) {
-            throw new PolicyViolationException("Cannot check retry attempts unless status is FAILED");
+            throw new BusinessRuleViolationException("Cannot check retry attempts unless status is FAILED");
         }
         return this.retryAttempts >= maxRetries;
     }
