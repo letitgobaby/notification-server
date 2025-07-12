@@ -10,6 +10,7 @@ dependencies {
     implementation project(':application')
 
     implementation 'org.springframework.boot:spring-boot-starter-aop'
-    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation 'org.springframework:spring-tx'
+    // implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 
 }
