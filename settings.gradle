@@ -20,7 +20,10 @@ include(
     'domain',
     'application',
     'infrastructure',
-    // 'bootstrap'
 
     'adapter:db',
+    'adapter:web',
+    'adapter:mq',
+
+    'bootstrap' // This is the main application module
 )
