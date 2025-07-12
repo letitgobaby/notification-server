@@ -1,0 +1,13 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092 # Kafka 브로커 주소
+    producer:
+      # key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # value-serializer: org.apache.kafka.common.serialization.StringSerializer # String JSON으로 발행
+      acks: all # 모든 리플리카가 메시지를 받았음을 확인해야 커밋 (안정성 중요)
+      retries: 3 # 전송 실패 시 재시도 횟수
+
+app: # 커스텀 애플리케이션 속성
+  kafka:
+    topic:
+      notification: notification
