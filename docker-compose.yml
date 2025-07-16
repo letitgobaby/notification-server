@@ -1,0 +1,63 @@
+services:
+
+  ##
+  mariadb:
+    image: mariadb:10.5
+    container_name: notification-mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: notification
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ##
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0 # Confluent Zookeeper 이미지 사용 (Kafka와 호환성 좋음)
+    hostname: zookeeper
+    container_name: notification-zookeeper
+    ports:
+      - "2181:2181" # 호스트 2181 포트와 컨테이너 2181 포트 매핑
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  ##
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0 # Confluent Kafka 이미지 사용
+    hostname: kafka
+    container_name: notification-kafka
+    ports:
+      - "9092:9092" # 호스트 9092 포트와 컨테이너 9092 포트 매핑 (Spring 설정과 동일)
+      - "9093:9093" # 내부 통신용 포트 (컨테이너 간 통신)
+    environment:
+      KAFKA_BROKER_ID: 1 # 브로커 ID, 클러스터에 여러 개면 유니크해야 함
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181 # Zookeeper 연결 정보 (서비스 이름:포트)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://notification-kafka:9093,PLAINTEXT_HOST://localhost:9092 # 외부에서 접속할 주소
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # 리스너 보안 프로토콜
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT # 브로커 간 통신 리스너 이름
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # 오프셋 토픽 복제 계수 (개발용은 1)
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # 트랜잭션 로그 복제 계수 (개발용은 1)
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1 # 트랜잭션 ISR 최소 수
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # 토픽 자동 생성 활성화 (개발 환경에서 편리)
+    depends_on: # Zookeeper가 먼저 시작되도록 설정
+      - zookeeper
+
+  ##
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: notification-kafka-ui
+    ports:
+      - "8088:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=notification-kafka:9093
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+    depends_on:
+      - kafka
