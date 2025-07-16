@@ -1,0 +1,11 @@
+server:
+    port: 8080
+    shutdown: graceful
+
+spring:
+  application:
+    name: notification-server
+  config:
+    import:
+    - "classpath:database-config.yml"
+    - "classpath:message-queue-config.yml"

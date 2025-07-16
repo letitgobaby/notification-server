@@ -6,6 +6,13 @@ build/
 !**/src/test/**/build/
 .DS_Store
 
+### Node.js ###
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+
 ### STS ###
 .apt_generated
 .classpath
