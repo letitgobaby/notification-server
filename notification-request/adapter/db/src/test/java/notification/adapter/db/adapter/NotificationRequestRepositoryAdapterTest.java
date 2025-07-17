@@ -93,10 +93,10 @@ class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfi
         NotificationRequest request = new NotificationRequest(
                 new NotificationRequestId("test-request-2"),
                 new Requester(RequesterType.SERVICE, "test-requester"),
-                List.of(new UserRecipient("recipient-1", new UserId("user-123"))),
+                List.of(new UserRecipient(new UserId("user-123"))),
                 List.of(NotificationType.EMAIL),
                 Map.of(NotificationType.EMAIL,
-                        new EmailSender("sender-1", "test@example.com", "Test Sender")),
+                        new EmailSender("test@example.com", "Test Sender")),
                 null, // content
                 new TemplateInfo("template-123", Map.of("key1", "value1", "key2", "value2")),
                 "Test memo",
@@ -113,7 +113,6 @@ class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfi
                     assertThat(savedRequest).isNotNull();
                     assertThat(savedRequest.getRequestId()).isEqualTo(request.getRequestId());
                     assertThat(savedRequest.getContent()).isNull();
-                    // assertThat(savedRequest.getTemplate()).isNull();
                     assertThat(savedRequest.getRecipients()).hasSize(1);
                     assertThat(savedRequest.getSenderInfos()).hasSize(1);
                 })
@@ -158,11 +157,11 @@ class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfi
         NotificationRequest request = new NotificationRequest(
                 new NotificationRequestId("test-request-3"),
                 new Requester(RequesterType.SERVICE, "test-requester"),
-                List.of(new UserRecipient("recipient-1", new UserId("user-123"))), // 최소 1개 필요
+                List.of(new UserRecipient(new UserId("user-123"))), // 최소 1개 필요
                 List.of(NotificationType.EMAIL),
                 Map.of(
                         NotificationType.EMAIL,
-                        new EmailSender("sender-1", "test@example.com", "Test Sender") //
+                        new EmailSender("test@example.com", "Test Sender") //
                 ),
                 null, // content
                 new TemplateInfo("template-123", Map.of("key1", "value1")), // template 제공
@@ -189,10 +188,10 @@ class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfi
         NotificationRequest request = new NotificationRequest(
                 new NotificationRequestId("test-request-4"),
                 new Requester(RequesterType.SERVICE, "test-requester"),
-                List.of(new UserRecipient("recipient-1", new UserId("user-123"))),
+                List.of(new UserRecipient(new UserId("user-123"))),
                 List.of(NotificationType.EMAIL),
                 Map.of(NotificationType.EMAIL,
-                        new EmailSender("sender-1", "test@example.com", "Test Sender")),
+                        new EmailSender("test@example.com", "Test Sender")),
                 new NotificationContent("Test Title", "Test Body", "http://example.com", null),
                 null, // template
                 "Test memo",
@@ -228,7 +227,8 @@ class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfi
         StepVerifier.create(adapter.save(saved))
                 .assertNext(updatedRequest -> {
                     assertThat(updatedRequest).isNotNull();
-                    assertThat(request.getRequestId().value()).isEqualTo(updatedRequest.getRequestId().value());
+                    assertThat(request.getRequestId().value())
+                            .isEqualTo(updatedRequest.getRequestId().value());
                     assertThat(updatedRequest.getStatus()).isEqualTo(RequestStatus.PROCESSING);
                 })
                 .verifyComplete();
@@ -238,10 +238,10 @@ class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfi
         return new NotificationRequest(
                 new NotificationRequestId(requestId),
                 new Requester(RequesterType.SERVICE, "test-requester"),
-                List.of(new UserRecipient("recipient-1", new UserId("user-123"))),
+                List.of(new UserRecipient(new UserId("user-123"))),
                 List.of(NotificationType.EMAIL),
                 Map.of(NotificationType.EMAIL,
-                        new EmailSender("sender-1", "test@example.com", "Test Sender")),
+                        new EmailSender("test@example.com", "Test Sender")),
                 new NotificationContent("Test Title", "Test Body", "http://example.com",
                         "http://image.example.com"),
                 new TemplateInfo("template-123", Map.of("key1", "value1", "key2", "value2")),

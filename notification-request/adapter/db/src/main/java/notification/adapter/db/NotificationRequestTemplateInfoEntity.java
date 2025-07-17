@@ -44,32 +44,6 @@ public class NotificationRequestTemplateInfoEntity implements Persistable<String
         this.isNewEntity = true;
     }
 
-    // public static NotificationRequestTemplateInfoEntity fromDomain(
-    // TemplateInfo templateInfo, String templateInfoId, String requestId) {
-    // if (templateInfo == null) {
-    // return null;
-    // }
-
-    // if (templateInfoId == null) {
-    // templateInfoId = UUID.randomUUID().toString(); // templateInfoId가 null인 경우 새로
-    // 생성
-    // }
-    // if (requestId == null) {
-    // throw new IllegalArgumentException("Request ID must not be null");
-    // }
-
-    // String serializedParameters = templateInfo.parameters() != null
-    // ? templateInfo.parameters().toString() // Map을 JSON 문자열로 변환 (직접 변환 로직 필요)
-    // : "{}";
-
-    // return NotificationRequestTemplateInfoEntity.builder()
-    // .templateInfoId(templateInfoId) // 상위에서 받아온 PK
-    // .requestId(requestId)
-    // .templateId(templateInfo.templateId())
-    // .templateParameters(serializedParameters)
-    // .build();
-    // }
-
     /**
      * Value Object를 Entity로 변환합니다.
      *
@@ -80,8 +54,8 @@ public class NotificationRequestTemplateInfoEntity implements Persistable<String
      * @return 변환된 Entity
      */
     public static NotificationRequestTemplateInfoEntity fromDomain(
-            String templateId, String templateParameters, String requestId,
-            String templateInfoId) {
+            // TemplateInfo template, String requestId) {
+            String templateInfoId, String templateId, String templateParameters, String requestId) {
 
         return NotificationRequestTemplateInfoEntity.builder()
                 .templateInfoId(templateInfoId) // 상위에서 받아온 PK
@@ -91,11 +65,6 @@ public class NotificationRequestTemplateInfoEntity implements Persistable<String
                 .build();
     }
 
-    // public static TemplateInfo
-    // toValueObject(NotificationRequestTemplateInfoEntity entity) {
-    // return new TemplateInfo(entity.templateId, entity.templateParameters);
-    // }
-
     @Override
     @Nullable
     public String getId() {
@@ -104,7 +73,7 @@ public class NotificationRequestTemplateInfoEntity implements Persistable<String
 
     @Override
     public boolean isNew() {
-        return isNewEntity;
+        return this.isNewEntity;
     }
 
 }

@@ -79,7 +79,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
                     assertThat(savedMessage).isNotNull();
                     assertThat(savedMessage.getMessageId()).isEqualTo(message.getMessageId());
                     assertThat(savedMessage.getRequestId()).isEqualTo(savedRequest.getRequestId());
-                    assertThat(savedMessage.getNotificationType()).isEqualTo(NotificationType.EMAIL);
+                    assertThat(savedMessage.getNotificationType())
+                            .isEqualTo(NotificationType.EMAIL);
                     assertThat(savedMessage.getDeliveryStatus()).isEqualTo(DeliveryStatus.PENDING);
                     assertThat(savedMessage.getRecipient().email()).isEqualTo("test@example.com");
                 })
@@ -89,7 +90,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
         StepVerifier.create(messageAdapter.findById(message.getMessageId()))
                 .assertNext(foundMessage -> {
                     assertThat(foundMessage.getRequestId()).isEqualTo(savedRequest.getRequestId());
-                    assertThat(foundMessage.getNotificationType()).isEqualTo(NotificationType.EMAIL);
+                    assertThat(foundMessage.getNotificationType())
+                            .isEqualTo(NotificationType.EMAIL);
                     assertThat(foundMessage.getRecipient().email()).isEqualTo("test@example.com");
                 })
                 .verifyComplete();
@@ -114,7 +116,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
         //
         StepVerifier.create(messageAdapter.findById(originalMessage.getMessageId()))
                 .assertNext(foundMessage -> {
-                    assertThat(foundMessage.getDeliveryStatus()).isEqualTo(DeliveryStatus.DISPATCHED);
+                    assertThat(foundMessage.getDeliveryStatus())
+                            .isEqualTo(DeliveryStatus.DISPATCHED);
                     assertThat(foundMessage.getDispatchedAt()).isNotNull();
                 })
                 .verifyComplete();
@@ -144,11 +147,13 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
 
         //
         StepVerifier.create(messageAdapter.save(emailMessage))
-                .assertNext(saved -> assertThat(saved.getNotificationType()).isEqualTo(NotificationType.EMAIL))
+                .assertNext(saved -> assertThat(saved.getNotificationType())
+                        .isEqualTo(NotificationType.EMAIL))
                 .verifyComplete();
 
         StepVerifier.create(messageAdapter.save(smsMessage))
-                .assertNext(saved -> assertThat(saved.getNotificationType()).isEqualTo(NotificationType.SMS))
+                .assertNext(saved -> assertThat(saved.getNotificationType())
+                        .isEqualTo(NotificationType.SMS))
                 .verifyComplete();
 
         //
@@ -171,13 +176,14 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
         NotificationRequestId requestId = new NotificationRequestId("test-req-" + System.currentTimeMillis());
         Requester requester = new Requester(RequesterType.USER, "user-123");
 
-        UserRecipient recipient = new UserRecipient("recipient-123", new UserId("user-123"));
+        UserRecipient recipient = new UserRecipient(new UserId("user-123"));
         List<RecipientReference> recipients = List.of(recipient);
 
         List<NotificationType> notificationTypes = List.of(NotificationType.EMAIL, NotificationType.SMS);
 
         Map<NotificationType, SenderInfo> senderInfos = Map.of(
-                NotificationType.EMAIL, new EmailSender("sender-123", "sender@example.com", "Test Sender"));
+                NotificationType.EMAIL,
+                new EmailSender("sender@example.com", "Test Sender"));
 
         NotificationContent content = new NotificationContent(
                 "Test Title",
@@ -209,9 +215,10 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
                 requestId,
                 NotificationType.EMAIL,
                 new Recipient("user-123", "test@example.com", "010-1234-5678", "device-token", "ko"),
-                new NotificationContent("Email Title", "Email Body", "http://example.com",
+                new NotificationContent("Email Title", "Email Body",
+                        "http://example.com",
                         "http://example.com/image.jpg"),
-                new EmailSender("sender-123", "sender@example.com", "Email Sender"),
+                new EmailSender("sender@example.com", "Email Sender"),
                 DeliveryStatus.PENDING,
                 Instant.now(),
                 null,
@@ -227,7 +234,7 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
                 NotificationType.SMS,
                 new Recipient("user-123", null, "010-1234-5678", null, "ko"),
                 new NotificationContent("SMS Title", "SMS Body", null, null),
-                new EmailSender("sender-123", "010-9876-5432", "SMS Sender"),
+                new EmailSender("010-9876-5432", "SMS Sender"),
                 DeliveryStatus.PENDING,
                 Instant.now(),
                 null,

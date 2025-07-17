@@ -29,15 +29,15 @@ public class NotificationMessageRepositoryAdapter implements NotificationMessage
     public Mono<NotificationMessage> update(NotificationMessage domain) {
         return Mono.fromCallable(() -> mapper.toEntity(domain))
                 .flatMap(messageRepository::save)
-                .map(mapper::toDomain)
-                .switchIfEmpty(Mono.error(new DataNotFoundException("Message not found for update")));
+                .switchIfEmpty(Mono.error(new DataNotFoundException("Message not found for update")))
+                .map(mapper::toDomain);
     }
 
     @Override
     public Mono<NotificationMessage> findById(NotificationMessageId id) {
         return messageRepository.findById(id.value())
-                .map(mapper::toDomain)
-                .switchIfEmpty(Mono.empty());
+                .switchIfEmpty(Mono.empty())
+                .map(mapper::toDomain);
     }
 
     @Override

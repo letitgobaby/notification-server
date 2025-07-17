@@ -60,14 +60,14 @@ public class NotificationRequestContentEntity implements Persistable<String> {
      * @return 변환된 Entity
      */
     public static NotificationRequestContentEntity fromDomain(
-            NotificationContent content, String requestId, String contentId) {
+            NotificationContent content, String requestId) {
         return NotificationRequestContentEntity.builder()
-                .contentId(contentId) // 상위에서 받아온 PK
+                .contentId(content.getContentId()) // 상위에서 받아온 PK
                 .requestId(requestId)
-                .title(content.title())
-                .body(content.body())
-                .imageUrl(content.imageUrl())
-                .redirectUrl(content.redirectUrl())
+                .title(content.getTitle())
+                .body(content.getBody())
+                .imageUrl(content.getImageUrl())
+                .redirectUrl(content.getRedirectUrl())
                 .build();
     }
 
@@ -78,7 +78,9 @@ public class NotificationRequestContentEntity implements Persistable<String> {
      * @return 변환된 Value Object
      */
     public NotificationContent toValueObject() {
-        return new NotificationContent(this.title, this.body, this.redirectUrl, this.imageUrl);
+        return new NotificationContent(
+                this.contentId,
+                this.title, this.body, this.redirectUrl, this.imageUrl);
     }
 
     @Override

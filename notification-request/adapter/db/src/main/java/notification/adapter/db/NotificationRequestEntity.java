@@ -30,12 +30,6 @@ public class NotificationRequestEntity implements Persistable<String> {
     @Column("notification_types")
     private String notificationTypes; // JSON serialized List<NotificationType>
 
-    @Column("content_id")
-    private String contentId; // FK로 저장된 NotificationContent ID
-
-    @Column("template_info_id")
-    private String templateInfoId; // UUID로 생성된 고유 ID
-
     @Column("memo")
     private String memo;
 
@@ -56,16 +50,13 @@ public class NotificationRequestEntity implements Persistable<String> {
 
     @Builder
     public NotificationRequestEntity(String requestId, String requesterType,
-            String requesterId,
-            String notificationTypes, String contentId, String templateInfoId,
+            String requesterId, String notificationTypes,
             String memo, LocalDateTime scheduledAt, String status,
             String failureReason, LocalDateTime processedAt, LocalDateTime createdAt) {
         this.requestId = requestId;
         this.requesterType = requesterType;
         this.requesterId = requesterId;
         this.notificationTypes = notificationTypes;
-        this.contentId = contentId;
-        this.templateInfoId = templateInfoId;
         this.memo = memo;
         this.scheduledAt = scheduledAt;
         this.status = status;
@@ -92,20 +83,14 @@ public class NotificationRequestEntity implements Persistable<String> {
     private NotificationRequestContentEntity content;
 
     public void setContent(NotificationRequestContentEntity content) {
-        if (content != null) {
-            this.content = content;
-            this.contentId = content.getContentId();
-        }
+        this.content = content;
     }
 
     @Transient
     private NotificationRequestTemplateInfoEntity templateInfo;
 
     public void setTemplateInfo(NotificationRequestTemplateInfoEntity templateInfo) {
-        if (templateInfo != null) {
-            this.templateInfo = templateInfo;
-            this.templateInfoId = templateInfo.getTemplateId();
-        }
+        this.templateInfo = templateInfo;
     }
 
     @Override

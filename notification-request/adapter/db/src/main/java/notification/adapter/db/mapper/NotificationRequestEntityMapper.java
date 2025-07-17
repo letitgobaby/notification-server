@@ -129,6 +129,7 @@ public class NotificationRequestEntityMapper {
         }
 
         return new NotificationContent(
+                entity.getContentId(),
                 entity.getTitle(),
                 entity.getBody(),
                 entity.getRedirectUrl(),
@@ -140,7 +141,9 @@ public class NotificationRequestEntityMapper {
             return null;
         }
 
-        return new TemplateInfo(entity.getTemplateId(),
+        return new TemplateInfo(
+                entity.getTemplateInfoId(),
+                entity.getTemplateId(),
                 deserializeTemplateParameters(entity.getTemplateParameters()));
     }
 
@@ -182,7 +185,7 @@ public class NotificationRequestEntityMapper {
             var entity = NotificationRequestRecipientEntity.fromDomain(
                     recipient, requestId, recipient.getId());
 
-            if (domain.getCreatedAt() == null) {
+            if (entity.getId() == null) {
                 entity.markAsNew();
             }
 
@@ -207,7 +210,7 @@ public class NotificationRequestEntityMapper {
             var entity = NotificationRequestSenderEntity.fromDomain(
                     senderInfo, requestId);
 
-            if (domain.getCreatedAt() == null) {
+            if (entity.getId() == null) {
                 entity.markAsNew();
             }
 
@@ -223,16 +226,17 @@ public class NotificationRequestEntityMapper {
      * @param contentId 컨텐츠 ID
      * @return 변환된 Entity
      */
-    public NotificationRequestContentEntity toContentEntity(NotificationRequest domain,
-            String requestId, String contentId) {
-        if (domain.getContent() == null) {
+    public NotificationRequestContentEntity toContentEntity(NotificationRequest domain, String requestId) {
+        NotificationContent content = domain.getContent();
+        if (content == null) {
             return null;
         }
 
         var entity = NotificationRequestContentEntity.fromDomain(
-                domain.getContent(), requestId, contentId);
+                domain.getContent(),
+                requestId);
 
-        if (domain.getCreatedAt() == null || contentId == null) {
+        if (entity.getContentId() == null) {
             entity.markAsNew();
         }
 
@@ -247,18 +251,19 @@ public class NotificationRequestEntityMapper {
      * @param templateInfoId 템플릿 정보 ID
      * @return 변환된 Entity
      */
-    public NotificationRequestTemplateInfoEntity toTemplateInfoEntity(NotificationRequest domain,
-            String requestId, String templateInfoId) {
-        if (domain.getTemplate() == null) {
+    public NotificationRequestTemplateInfoEntity toTemplateInfoEntity(NotificationRequest domain, String requestId) {
+        TemplateInfo template = domain.getTemplate();
+        if (template == null) {
             return null;
         }
 
         var entity = NotificationRequestTemplateInfoEntity.fromDomain(
-                domain.getTemplate().templateId(),
-                serializeTemplateParameters(domain.getTemplate().parameters()),
-                requestId, templateInfoId);
+                template.getTemplateInfoId(),
+                template.getTemplateId(),
+                serializeTemplateParameters(template.getParameters()),
+                requestId);
 
-        if (domain.getCreatedAt() == null || templateInfoId == null) {
+        if (entity.getTemplateInfoId() == null) {
             entity.markAsNew();
         }
 

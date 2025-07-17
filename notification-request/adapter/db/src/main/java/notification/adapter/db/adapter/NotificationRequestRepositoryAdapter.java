@@ -8,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.adapter.db.NotificationRequestContentEntity;
 import notification.adapter.db.NotificationRequestEntity;
-import notification.adapter.db.NotificationRequestRecipientEntity;
-import notification.adapter.db.NotificationRequestSenderEntity;
 import notification.adapter.db.NotificationRequestTemplateInfoEntity;
 import notification.adapter.db.mapper.NotificationRequestEntityMapper;
 import notification.adapter.db.repository.R2dbcNotificationRequestContentRepository;
@@ -53,7 +51,6 @@ public class NotificationRequestRepositoryAdapter implements NotificationRequest
                             .flatMap(entity -> saveTemplateInfo(domain, entity))
                             .flatMap(entity -> saveRecipients(domain, entity))
                             .flatMap(entity -> saveSenders(domain, entity))
-                            .flatMap(requestRepository::save)
                             .map(mapper::toDomain);
                 });
     }
@@ -70,8 +67,7 @@ public class NotificationRequestRepositoryAdapter implements NotificationRequest
         if (domain.getContent() == null)
             return Mono.just(entity);
 
-        return Mono.fromCallable(() -> mapper.toContentEntity(domain,
-                entity.getRequestId(), entity.getContentId()))
+        return Mono.fromCallable(() -> mapper.toContentEntity(domain, entity.getRequestId()))
                 .flatMap(contentRepository::save)
                 .map(contentEntity -> {
                     entity.setContent(contentEntity);
@@ -91,8 +87,7 @@ public class NotificationRequestRepositoryAdapter implements NotificationRequest
         if (domain.getTemplate() == null)
             return Mono.just(savedEntity);
 
-        return Mono.fromCallable(() -> mapper.toTemplateInfoEntity(
-                domain, savedEntity.getRequestId(), savedEntity.getTemplateInfoId()))
+        return Mono.fromCallable(() -> mapper.toTemplateInfoEntity(domain, savedEntity.getRequestId()))
                 .flatMap(templateInfoRepository::save)
                 .map(templateInfoEntity -> {
                     savedEntity.setTemplateInfo(templateInfoEntity);
@@ -141,42 +136,35 @@ public class NotificationRequestRepositoryAdapter implements NotificationRequest
     @Override
     public Mono<NotificationRequest> findById(NotificationRequestId id) {
 
-        Mono<List<NotificationRequestRecipientEntity>> recipientsMono = recipientRepository.findByRequestId(id.value())
-                .collectList().defaultIfEmpty(List.of());
+        var recipientsMono = recipientRepository.findByRequestId(id.value()).collectList()
+                .defaultIfEmpty(List.of()); // 기본값 설정
 
-        Mono<List<NotificationRequestSenderEntity>> sendersMono = senderRepository.findByRequestId(id.value())
-                .collectList().defaultIfEmpty(List.of());
+        var sendersMono = senderRepository.findByRequestId(id.value()).collectList()
+                .defaultIfEmpty(List.of()); // 기본값 설정
 
-        Mono<NotificationRequestContentEntity> contentMono = contentRepository.findByRequestId(id.value())
-                .switchIfEmpty(Mono.just(new NotificationRequestContentEntity()));
+        var contentMono = contentRepository.findByRequestId(id.value())
+                .switchIfEmpty(Mono.just(new NotificationRequestContentEntity())); // 기본값 설정
 
-        Mono<NotificationRequestTemplateInfoEntity> templateMono = templateInfoRepository.findByRequestId(id.value())
-                .switchIfEmpty(Mono.just(new NotificationRequestTemplateInfoEntity()));
+        var templateMono = templateInfoRepository.findByRequestId(id.value())
+                .switchIfEmpty(Mono.just(new NotificationRequestTemplateInfoEntity())); // 기본값 설정
 
         return requestRepository.findById(id.value()).flatMap(entity -> {
-            return Mono.zip(recipientsMono, sendersMono, contentMono, templateMono)
-                    .flatMap(tuple -> {
-                        var content = tuple.getT3();
-                        var templateInfo = tuple.getT4();
-                        if (content.getContentId() == null && templateInfo.getTemplateId() == null) {
-                            return Mono.error(new DataNotFoundException(
-                                    "Content or TemplateInfo not found for NotificationRequest with ID: "
-                                            + id.value()));
-                        }
+            return Mono.zip(recipientsMono, sendersMono, contentMono, templateMono).flatMap(tuple -> {
+                var content = tuple.getT3();
+                var templateInfo = tuple.getT4();
+                if (content.getContentId() == null && templateInfo.getTemplateId() == null) {
+                    return Mono.error(new DataNotFoundException(
+                            "Content or TemplateInfo not found for NotificationRequest with ID: "
+                                    + id.value()));
+                }
 
-                        entity.setRecipients(tuple.getT1());
-                        entity.setSenders(tuple.getT2());
-                        entity.setContent(content);
-                        entity.setTemplateInfo(templateInfo);
-                        return Mono.just(mapper.toDomain(entity));
-                    });
+                entity.setRecipients(tuple.getT1());
+                entity.setSenders(tuple.getT2());
+                entity.setContent(content);
+                entity.setTemplateInfo(templateInfo);
+                return Mono.just(mapper.toDomain(entity));
+            });
         });
-    }
-
-    @Override
-    public Mono<Void> deleteById(NotificationRequestId id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteById'");
     }
 
 }
