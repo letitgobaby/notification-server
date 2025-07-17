@@ -23,11 +23,4 @@ public interface NotificationRequestRepositoryPort {
      */
     Mono<NotificationRequest> findById(NotificationRequestId id);
 
-    /**
-     * 
-     * @param id
-     * @return Mono<Void>
-     */
-    Mono<Void> deleteById(NotificationRequestId id);
-
 }

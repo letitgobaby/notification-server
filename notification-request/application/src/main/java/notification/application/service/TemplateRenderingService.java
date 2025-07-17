@@ -36,11 +36,11 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
     @Override
     public Mono<RenderedContent> renderTemplate(TemplateInfo templateInfo, NotificationType type, String language) {
         log.debug("Rendering template: {}, type : {}, language: {}",
-                templateInfo.templateId(), type.name(), language);
+                templateInfo.getTemplateId(), type.name(), language);
 
         // 캐시 키 생성 (템플릿ID + 타입 + 언어 + 매개변수 해시)
         String cacheKey = String.format("%s_%s_%s",
-                templateInfo.templateId(),
+                templateInfo.getTemplateId(),
                 type.name(),
                 language != null ? language : "ko");
 
@@ -55,12 +55,12 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
      */
     private Mono<RenderedContent> renderTemplateInternal(
             TemplateInfo templateInfo, NotificationType type, String language) {
-        String templateId = templateInfo.templateId();
+        String templateId = templateInfo.getTemplateId();
         return templateDefinitionProvider.getTemplateDefinition(templateId, type.name(), language)
                 .flatMap(definition -> {
                     return Mono.just(new RenderedContent(
-                            bindParameters(definition.titleTemplate(), templateInfo.parameters()),
-                            bindParameters(definition.bodyTemplate(), templateInfo.parameters()),
+                            bindParameters(definition.titleTemplate(), templateInfo.getParameters()),
+                            bindParameters(definition.bodyTemplate(), templateInfo.getParameters()),
                             definition.language(),
                             templateId));
                 }).onErrorResume(e -> {
@@ -80,7 +80,7 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
 
     /**
      * 주어진 템플릿 문자열의 플레이스홀더를 파라미터 맵의 값으로 바인딩합니다.
-     * 예: "안녕하세요. {{name}}님." + {"name": "홍길동"} -> "안녕하세요. 홍길동님."
+     * 예: "안녕하세요. ${{name}}님." + {"name": "홍길동"} -> "안녕하세요. 홍길동님."
      * 
      * @param templateString 템플릿 문자열
      * @param parameters     플레이스홀더와 대응되는 값의 맵
@@ -92,7 +92,7 @@ public class TemplateRenderingService implements TemplateRenderingUseCase {
         }
 
         // {{var}} 형태의 플레이스홀더를 찾는 정규 표현식
-        Pattern pattern = Pattern.compile("\\{\\{(\\w+)\\}\\}");
+        Pattern pattern = Pattern.compile("\\$\\{\\{(\\w+)\\}\\}"); // ${{var}} 형태로 변경
         Matcher matcher = pattern.matcher(templateString);
         StringBuffer sb = new StringBuffer();
 

@@ -27,14 +27,13 @@ public class NotificationRequestWithOutboxSaver {
      * @return 저장된 RequestMessageOutbox 객체를 포함하는 Mono
      */
     public Mono<RequestOutbox> save(NotificationRequest request) {
-        return requestRepository.save(request)
-                .flatMap(saved -> {
-                    RequestOutbox outbox = RequestOutbox.create(
-                            saved.getRequestId().value(),
-                            jsonPayloadFactory.toJsonPayload(saved),
-                            saved.getScheduledAt());
-                    return outboxRepository.save(outbox);
-                });
+        return requestRepository.save(request).flatMap(saved -> {
+            RequestOutbox outbox = RequestOutbox.create(
+                    saved.getRequestId().value(),
+                    jsonPayloadFactory.toJsonPayload(saved),
+                    saved.getScheduledAt());
+            return outboxRepository.save(outbox);
+        });
     }
 
 }

@@ -28,13 +28,15 @@ public class NotificationMessageDispatchHandler {
      * @return Mono<Void>
      */
     public Mono<Void> handle(NotificationMessage message, MessageOutbox outbox) {
-        return notificationMessagePublish.publish(message).flatMap(v -> {
+        log.info("Dispatching NotificationMessage: {}", message.getMessageId().value());
 
-            // 메시지 발행이 성공하면 알림 메시지를 DISPATCHED 상태로 업데이트합니다.
-            message.markAsDispatched();
+        return notificationMessagePublish.publish(message)
+                .then(Mono.defer(() -> {
+                    // 메시지 발행이 성공하면 알림 메시지를 DISPATCHED 상태로 업데이트합니다.
+                    message.markAsDispatched();
 
-            return handleCompletedMessage(message, outbox);
-        });
+                    return handleCompletedMessage(message, outbox);
+                }));
     }
 
     /**

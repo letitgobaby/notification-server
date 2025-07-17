@@ -81,7 +81,7 @@ class NotificationRequestCommandMapperTest {
                                 .isInstanceOf(PushSender.class);
 
                         assertThat(request.getTemplate()).isNotNull();
-                        assertThat(request.getTemplate().templateId())
+                        assertThat(request.getTemplate().getTemplateId())
                                 .isEqualTo("WELCOME_EMAIL");
 
                         assertThat(request.getMemo()).isEqualTo("신규 사용자 환영 이메일");
@@ -120,8 +120,9 @@ class NotificationRequestCommandMapperTest {
                                 .isInstanceOf(SmsSender.class);
 
                         assertThat(request.getContent()).isNotNull();
-                        assertThat(request.getContent().title()).isEqualTo("긴급 공지");
-                        assertThat(request.getContent().body()).isEqualTo("시스템 점검이 예정되어 있습니다.");
+                        assertThat(request.getContent().getTitle()).isEqualTo("긴급 공지");
+                        assertThat(request.getContent().getBody())
+                                .isEqualTo("시스템 점검이 예정되어 있습니다.");
                     })
                     .verifyComplete();
         }

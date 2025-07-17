@@ -46,7 +46,7 @@ public class NotificationContentBuilder {
         }
 
         String templateKey = new TemplateRenderKey(
-                request.getTemplate().templateId(),
+                request.getTemplate().getTemplateId(),
                 type.name(),
                 recipient.language() != null ? recipient.language() : DEFAULT_LANGUAGE)
                 .toString();
@@ -58,7 +58,7 @@ public class NotificationContentBuilder {
         }
 
         // 파라미터 적용
-        Map<String, String> parameters = request.getTemplate().parameters();
+        Map<String, String> parameters = request.getTemplate().getParameters();
         String finalTitle = applyParameters(rendered.title(), parameters, recipient, data);
         String finalBody = applyParameters(rendered.body(), parameters, recipient, data);
 

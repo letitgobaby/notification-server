@@ -35,8 +35,9 @@ public class NotificationMessageProcessor implements NotificationMessageProcesso
 
         return notificationMessageOutboxLoader.load(outbox).flatMap(message -> {
             return notificationMessageDispatchHandler.handle(message, outbox)
+                    .doOnSuccess(v -> log.info("Successfully processed message: {}", outbox.getAggregateId()))
                     .onErrorResume(e -> exceptionHandler.handle(message, outbox, e));
-        }).doOnSuccess(v -> log.info("Successfully processed message: {}", outbox.getAggregateId()));
+        });
     }
 
 }

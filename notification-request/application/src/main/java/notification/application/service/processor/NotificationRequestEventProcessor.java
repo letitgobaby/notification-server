@@ -34,6 +34,7 @@ public class NotificationRequestEventProcessor implements NotificationRequestEve
 
         return notificationRequestOutboxLoader.load(outbox).flatMap(domain -> {
             return notificationRequestProcessingHandler.handle(domain).then()
+                    .doOnSuccess(v -> log.info("Successfully processed request: {}", outbox.getAggregateId()))
                     .onErrorResume(e -> executionHandler.handle(domain, outbox, e));
         });
     }

@@ -43,7 +43,15 @@ public class NotificationRequestProcessingHandler {
                 .flatMap(notificationMessageWithOutboxSaver::save)
                 .flatMap(this::publishMessageOutbox)
                 .collectList()
-                .doOnNext(savedList -> clearRequestMessageOutbox(requestId));
+                .flatMap(savedList -> clearRequestMessageOutbox(requestId).thenReturn(savedList))
+                .flatMap(savedList -> {
+
+                    // 알림 요청을 Dispatched 상태로 변경하고 저장
+                    domain.markAsDispatched();
+
+                    return notificationRequestRepository.save(domain)
+                            .thenReturn(savedList);
+                });
     }
 
     /**
@@ -68,6 +76,7 @@ public class NotificationRequestProcessingHandler {
      */
     private Mono<MessageOutbox> publishMessageOutbox(MessageOutbox MessageOutbox) {
         return MessageOutboxEventPublisher.publish(MessageOutbox)
+                .doOnError(err -> log.error("Failed to publish outbox message: {}", err.getMessage(), err))
                 .thenReturn(MessageOutbox);
     }
 

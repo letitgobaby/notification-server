@@ -96,7 +96,7 @@ public class NotificationRequestDataCollector {
 
             // 모든 NotificationType에 대해 템플릿 키 생성
             for (NotificationType type : request.getNotificationTypes()) {
-                templateKeys.add(new TemplateRenderKey(request.getTemplate().templateId(), type.name(), language));
+                templateKeys.add(new TemplateRenderKey(request.getTemplate().getTemplateId(), type.name(), language));
             }
         }
 
