@@ -82,8 +82,8 @@ class NotificationMessagePublishTest {
                 .messageId(messageId.value())
                 .requestId(requestId.value())
                 .createdAt(createdAt)
-                .subject(content.title())
-                .body(content.body())
+                .subject(content.getTitle())
+                .body(content.getBody())
                 .senderEmail(emailSender.senderEmailAddress())
                 .senderName(emailSender.senderName())
                 .recipientEmail(recipient.email())
@@ -101,7 +101,7 @@ class NotificationMessagePublishTest {
                 .createdAt(createdAt)
                 .senderPhone(smsSender.senderPhoneNumber())
                 .recipientPhone(recipient.phoneNumber())
-                .messageText(content.body())
+                .messageText(content.getBody())
                 .build();
 
         // PUSH 메시지 설정
@@ -115,10 +115,10 @@ class NotificationMessagePublishTest {
                 .requestId(requestId.value())
                 .createdAt(createdAt)
                 .deviceToken(recipient.deviceToken())
-                .title(content.title())
-                .body(content.body())
-                .imageUrl(content.imageUrl())
-                .redirectUrl(content.redirectUrl())
+                .title(content.getTitle())
+                .body(content.getBody())
+                .imageUrl(content.getImageUrl())
+                .redirectUrl(content.getRedirectUrl())
                 .senderName(pushSender.senderName())
                 .build();
     }

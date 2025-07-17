@@ -11,3 +11,7 @@ app: # 커스텀 애플리케이션 속성
   kafka:
     topic:
       notification: notification
+
+logging:
+  level:
+    org.apache.kafka.clients.producer.ProducerConfig: WARN

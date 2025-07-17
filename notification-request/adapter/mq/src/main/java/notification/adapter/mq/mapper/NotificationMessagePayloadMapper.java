@@ -38,8 +38,8 @@ public class NotificationMessagePayloadMapper {
                 .messageId(message.getMessageId().value())
                 .requestId(message.getRequestId().value())
                 .createdAt(message.getCreatedAt())
-                .subject(message.getNotificationContent().title())
-                .body(message.getNotificationContent().body())
+                .subject(message.getNotificationContent().getTitle())
+                .body(message.getNotificationContent().getBody())
                 .senderEmail(senderInfo.senderEmailAddress())
                 .senderName(senderInfo.senderName())
                 .recipientEmail(message.getRecipient().email())
@@ -55,7 +55,7 @@ public class NotificationMessagePayloadMapper {
                 .createdAt(message.getCreatedAt())
                 .senderPhone(senderInfo.senderPhoneNumber())
                 .recipientPhone(message.getRecipient().phoneNumber())
-                .messageText(message.getNotificationContent().body())
+                .messageText(message.getNotificationContent().getBody())
                 .build();
     }
 
@@ -67,10 +67,10 @@ public class NotificationMessagePayloadMapper {
                 .requestId(message.getRequestId().value())
                 .createdAt(message.getCreatedAt())
                 .deviceToken(message.getRecipient().deviceToken())
-                .title(message.getNotificationContent().title())
-                .body(message.getNotificationContent().body())
-                .imageUrl(message.getNotificationContent().imageUrl())
-                .redirectUrl(message.getNotificationContent().redirectUrl())
+                .title(message.getNotificationContent().getTitle())
+                .body(message.getNotificationContent().getBody())
+                .imageUrl(message.getNotificationContent().getImageUrl())
+                .redirectUrl(message.getNotificationContent().getRedirectUrl())
                 .senderName(senderInfo.senderName())
                 .build();
     }

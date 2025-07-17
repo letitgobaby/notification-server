@@ -83,8 +83,8 @@ class NotificationMessagePayloadMapperTest {
                     assertEquals(messageId.value(), emailPayload.getMessageId());
                     assertEquals(requestId.value(), emailPayload.getRequestId());
                     assertEquals(createdAt, emailPayload.getCreatedAt());
-                    assertEquals(notificationContent.title(), emailPayload.getSubject());
-                    assertEquals(notificationContent.body(), emailPayload.getBody());
+                    assertEquals(notificationContent.getTitle(), emailPayload.getSubject());
+                    assertEquals(notificationContent.getBody(), emailPayload.getBody());
                     assertEquals(emailSender.senderEmailAddress(), emailPayload.getSenderEmail());
                     assertEquals(emailSender.senderName(), emailPayload.getSenderName());
                     assertEquals(recipient.email(), emailPayload.getRecipientEmail());
@@ -116,7 +116,7 @@ class NotificationMessagePayloadMapperTest {
                     assertEquals(createdAt, smsPayload.getCreatedAt());
                     assertEquals(smsSender.senderPhoneNumber(), smsPayload.getSenderPhone());
                     assertEquals(recipient.phoneNumber(), smsPayload.getRecipientPhone());
-                    assertEquals(notificationContent.body(), smsPayload.getMessageText());
+                    assertEquals(notificationContent.getBody(), smsPayload.getMessageText());
                     assertEquals("SMS", smsPayload.getNotificationType());
                 })
                 .verifyComplete();
@@ -144,10 +144,11 @@ class NotificationMessagePayloadMapperTest {
                     assertEquals(requestId.value(), pushPayload.getRequestId());
                     assertEquals(createdAt, pushPayload.getCreatedAt());
                     assertEquals(recipient.deviceToken(), pushPayload.getDeviceToken());
-                    assertEquals(notificationContent.title(), pushPayload.getTitle());
-                    assertEquals(notificationContent.body(), pushPayload.getBody());
-                    assertEquals(notificationContent.imageUrl(), pushPayload.getImageUrl());
-                    assertEquals(notificationContent.redirectUrl(), pushPayload.getRedirectUrl());
+                    assertEquals(notificationContent.getTitle(), pushPayload.getTitle());
+                    assertEquals(notificationContent.getBody(), pushPayload.getBody());
+                    assertEquals(notificationContent.getImageUrl(), pushPayload.getImageUrl());
+                    assertEquals(notificationContent.getRedirectUrl(),
+                            pushPayload.getRedirectUrl());
                     assertEquals(pushSender.senderName(), pushPayload.getSenderName());
                     assertEquals("PUSH", pushPayload.getNotificationType());
                 })
@@ -299,11 +300,13 @@ class NotificationMessagePayloadMapperTest {
                 emailSender, DeliveryStatus.PENDING, scheduledAt, null, null, createdAt);
 
         NotificationMessage smsMessage = new NotificationMessage(
-                NotificationMessageId.create(), requestId, NotificationType.SMS, recipient, notificationContent,
+                NotificationMessageId.create(), requestId, NotificationType.SMS, recipient,
+                notificationContent,
                 smsSender, DeliveryStatus.PENDING, scheduledAt, null, null, createdAt);
 
         NotificationMessage pushMessage = new NotificationMessage(
-                NotificationMessageId.create(), requestId, NotificationType.PUSH, recipient, notificationContent,
+                NotificationMessageId.create(), requestId, NotificationType.PUSH, recipient,
+                notificationContent,
                 pushSender, DeliveryStatus.PENDING, scheduledAt, null, null, createdAt);
 
         // when & then
