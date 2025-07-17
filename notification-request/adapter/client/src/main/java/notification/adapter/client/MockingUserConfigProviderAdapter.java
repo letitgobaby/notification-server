@@ -42,8 +42,8 @@ public class MockingUserConfigProviderAdapter implements UserConfigProviderPort 
                         "push-token-100",
                         "charlie@example.com",
                         "010-1111-2222",
-                        "ko",
-                        "Asia/Seoul"));
+                        "en",
+                        "America/New_York"));
 
                 put("user-101", new UserConfig(
                         "user-101",
@@ -60,8 +60,8 @@ public class MockingUserConfigProviderAdapter implements UserConfigProviderPort 
                         "push-token-102",
                         "eve@example.com",
                         "010-3333-4444",
-                        "ko",
-                        "Asia/Seoul"));
+                        "en",
+                        "America/New_York"));
 
                 put("user-555", new UserConfig(
                         "user-555",
