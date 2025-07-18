@@ -29,15 +29,18 @@ public class IdempotentOperationAspect {
 
     private final IdempotentOperationService idempotentOperationService;
 
-    @Around("@annotation(idempotent)")
+    @Around("@annotation(notification.definition.annotations.Idempotent)")
     @SuppressWarnings("unchecked")
-    // public <T> Object applyIdempotency(ProceedingJoinPoint pjp, Idempotent
-    // idempotent) throws Throwable {
-    public <T> Object applyIdempotency(Idempotent idempotent, ProceedingJoinPoint pjp) throws Throwable {
-        log.info("Applying idempotency for operation: {} / {}", idempotent.argKey(), idempotent.operationType());
-
+    public <T> Object applyIdempotency(ProceedingJoinPoint pjp) throws Throwable {
         MethodSignature signature = (MethodSignature) pjp.getSignature();
         Method method = signature.getMethod();
+
+        // Idempotent 어노테이션을 직접 가져옴
+        Idempotent idempotent = method.getAnnotation(Idempotent.class);
+        if (idempotent == null) {
+            log.warn("Idempotent annotation not found on method: {}", method.getName());
+            return pjp.proceed();
+        }
         Object[] args = pjp.getArgs();
 
         EvaluationContext context = new StandardEvaluationContext();
