@@ -1,4 +1,4 @@
-package notification.application.service;
+package notification.application.service.event.publisher;
 
 import org.springframework.stereotype.Service;
 
@@ -26,10 +26,7 @@ public class PublishRequestOutboxEventsService implements PublishRequestOutboxEv
     @Override
     public Mono<Void> publish() {
         return requestOutboxRepository.findPendingAndFailedMessages()
-                .map(outbox -> {
-                    requestOutboxEventPublisher.publish(outbox);
-                    return outbox;
-                })
+                .flatMap(outbox -> requestOutboxEventPublisher.publish(outbox))
                 .doOnError(e -> log.error("Error processing outbox message", e))
                 .then();
     }

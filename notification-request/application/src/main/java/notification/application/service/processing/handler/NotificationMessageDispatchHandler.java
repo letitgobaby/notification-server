@@ -1,4 +1,4 @@
-package notification.application.service.support;
+package notification.application.service.processing.handler;
 
 import org.springframework.stereotype.Component;
 

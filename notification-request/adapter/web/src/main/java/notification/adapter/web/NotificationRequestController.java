@@ -16,7 +16,7 @@ import notification.adapter.web.constants.MyHttpHeaders;
 import notification.adapter.web.dto.request.NotificationCreateRequest;
 import notification.adapter.web.dto.response.NotificationRequestResponse;
 import notification.adapter.web.mapper.NotificationCreateRequestMapper;
-import notification.application.notifiation.port.inbound.NotificationRequestReceviedUseCase;
+import notification.application.notifiation.port.inbound.ProcessNotificationRequestUseCase;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class NotificationRequestController {
 
-    private final NotificationRequestReceviedUseCase notificationRequestReceviedService;
+    private final ProcessNotificationRequestUseCase processNotificationRequest;
     private final NotificationCreateRequestMapper notificationCreateRequestMapper;
 
     @PostMapping("/notifications")
@@ -36,7 +36,7 @@ public class NotificationRequestController {
         log.info("Received notification request: [{}] {}", idempotencyKey, request);
 
         return Mono.fromCallable(() -> notificationCreateRequestMapper.toCommand(request))
-                .flatMap(command -> notificationRequestReceviedService.handle(command, idempotencyKey))
+                .flatMap(command -> processNotificationRequest.handle(command, idempotencyKey))
                 .map(result -> new NotificationRequestResponse(
                         result.notificationId(), result.status(), result.message()));
     }

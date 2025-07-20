@@ -19,7 +19,7 @@ import notification.adapter.web.dto.request.NotificationCreateRequest;
 import notification.adapter.web.mapper.NotificationCreateRequestMapper;
 import notification.application.notifiation.dto.NotificationRequestCommand;
 import notification.application.notifiation.dto.NotificationRequestResult;
-import notification.application.notifiation.port.inbound.NotificationRequestReceviedUseCase;
+import notification.application.notifiation.port.inbound.ProcessNotificationRequestUseCase;
 import notification.domain.enums.NotificationType;
 import notification.domain.enums.RequesterType;
 import reactor.core.publisher.Mono;
@@ -30,7 +30,7 @@ class NotificationRequestControllerTest {
     private WebTestClient webTestClient;
 
     @Mock
-    private NotificationRequestReceviedUseCase notificationRequestReceviedService;
+    private ProcessNotificationRequestUseCase notificationRequestReceviedService;
     @Mock
     private NotificationCreateRequestMapper notificationCreateRequestMapper;
 

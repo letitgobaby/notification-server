@@ -1,4 +1,4 @@
-package notification.application.service.support;
+package notification.application.service.infrastructure.saver;
 
 import org.springframework.stereotype.Component;
 
@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import notification.application.common.JsonPayloadFactory;
 import notification.application.notifiation.port.outbound.persistence.NotificationRequestRepositoryPort;
 import notification.application.outbox.port.outbound.RequestOutboxRepositoryPort;
+import notification.definition.annotations.UnitOfWork;
+import notification.definition.enums.Propagation;
 import notification.definition.vo.outbox.RequestOutbox;
 import notification.domain.NotificationRequest;
 import reactor.core.publisher.Mono;
@@ -26,7 +28,10 @@ public class NotificationRequestWithOutboxSaver {
      * @param request NotificationRequest 객체
      * @return 저장된 RequestMessageOutbox 객체를 포함하는 Mono
      */
+    @UnitOfWork(propagation = Propagation.REQUIRES_NEW)
     public Mono<RequestOutbox> save(NotificationRequest request) {
+        log.info("Saving notification request: {}", request.getRequester());
+
         return requestRepository.save(request).flatMap(saved -> {
             RequestOutbox outbox = RequestOutbox.create(
                     saved.getRequestId().value(),

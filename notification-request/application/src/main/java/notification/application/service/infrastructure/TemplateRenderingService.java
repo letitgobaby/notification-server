@@ -1,4 +1,4 @@
-package notification.application.service;
+package notification.application.service.infrastructure;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

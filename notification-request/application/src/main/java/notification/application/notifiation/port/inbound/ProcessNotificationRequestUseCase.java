@@ -4,7 +4,7 @@ import notification.application.notifiation.dto.NotificationRequestCommand;
 import notification.application.notifiation.dto.NotificationRequestResult;
 import reactor.core.publisher.Mono;
 
-public interface NotificationRequestReceviedUseCase {
+public interface ProcessNotificationRequestUseCase {
 
     Mono<NotificationRequestResult> handle(
             NotificationRequestCommand command, String idempotencyKey);

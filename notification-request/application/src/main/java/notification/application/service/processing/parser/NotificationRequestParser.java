@@ -1,4 +1,4 @@
-package notification.application.service.support;
+package notification.application.service.processing.parser;
 
 import java.util.Map;
 
@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import notification.application.service.support.NotificationContentBuilder;
+import notification.application.service.support.NotificationRequestDataCollector;
 import notification.definition.vo.CollectedData;
 import notification.definition.vo.UserConfig;
 import notification.domain.NotificationMessage;

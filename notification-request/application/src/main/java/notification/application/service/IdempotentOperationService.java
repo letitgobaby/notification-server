@@ -13,6 +13,8 @@ import notification.application.idempotency.IdempotencyDuplicateKeyException;
 import notification.application.idempotency.port.inbound.IdempotentOperationUseCase;
 import notification.application.idempotency.port.outbound.IdempotentRepositoryPort;
 import notification.definition.annotations.UnitOfWork;
+import notification.definition.enums.Propagation;
+import notification.definition.exceptions.DuplicateRequestException;
 import notification.definition.vo.JsonPayload;
 import reactor.core.publisher.Mono;
 
@@ -32,7 +34,7 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
      * @param data
      * @return Idempotency 객체
      */
-    @UnitOfWork
+    @UnitOfWork(propagation = Propagation.REQUIRES_NEW)
     @Override
     public <T> Mono<T> performOperation(String idempotencyKey, String operationType,
             Mono<T> businessLogic, Class<T> resultType) {
@@ -49,6 +51,8 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
                     // 새로운 요청: 비즈니스 로직 실행 및 결과 저장
                     return executeAndSave(idempotency, businessLogic, resultType);
                 })
+                .doOnSuccess(result -> log.info("Idempotent operation completed successfully: {} / {}",
+                        idempotencyKey, operationType))
                 .onErrorResume(e -> {
                     log.error("Failed to perform idempotent operation: {}", e.getMessage(), e);
 
@@ -77,16 +81,16 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
             // 2. 결과를 JsonPayload로 변환
             return getDataAsString(result).flatMap(data -> {
 
-                // 3. 멱등성 객체 업데이트
+                // 3. 멱등성 객체 생성
                 Idempotency updatedIdempotency = new Idempotency(
                         idempotency.idempotencyKey(), idempotency.operationType(),
                         data, Instant.now());
 
-                // 4. 업데이트된 객체 저장 후 결과 반환
-                // 4-1. 중복 키 예외 발생 시 재시도
+                // 4. 생성된 객체 저장 후 결과 반환
                 return idempotencyRepository.save(updatedIdempotency)
                         .thenReturn(result)
                         .onErrorResume(e -> {
+                            // 4-1. 중복 키 예외 발생 시 재시도
                             if (e instanceof DuplicateKeyException) {
                                 return Mono.error(new IdempotencyDuplicateKeyException(
                                         "Idempotency Duplicate key error occurred.", e));
@@ -110,13 +114,13 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
         return idempotencyRepository.findById(idempotencyKey, operationType)
                 .flatMap(idempotency -> {
                     if (idempotency.data() != null) {
-                        // 기존 데이터가 있다면 그 데이터를 객체로 변환하여 반환
+                        // 기존 데이터를 객체로 변환하여 반환
                         return getDataAsObject(idempotency.data(), resultType);
                     }
 
-                    // 데이터가 없거나 변환 불가능하면 예외 발생 (비정상 케이스)yKey: {}.",
+                    // 데이터가 없거나 변환 불가능하면 예외 발생 (비정상 케이스)
                     return Mono.error(
-                            new IllegalStateException("Idempotent operation concurrent conflict with no result."));
+                            new DuplicateRequestException("Idempotent operation concurrent conflict with no result."));
                 })
                 .onErrorResume(e -> {
                     log.error("Retrying idempotent operation due to duplicate key: {}", e.getMessage(), e);

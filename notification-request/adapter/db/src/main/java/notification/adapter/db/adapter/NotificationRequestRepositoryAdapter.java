@@ -135,18 +135,17 @@ public class NotificationRequestRepositoryAdapter implements NotificationRequest
 
     @Override
     public Mono<NotificationRequest> findById(NotificationRequestId id) {
-
         var recipientsMono = recipientRepository.findByRequestId(id.value()).collectList()
-                .defaultIfEmpty(List.of()); // 기본값 설정
+                .switchIfEmpty(Mono.defer(() -> Mono.just(List.of())));
 
         var sendersMono = senderRepository.findByRequestId(id.value()).collectList()
-                .defaultIfEmpty(List.of()); // 기본값 설정
+                .switchIfEmpty(Mono.defer(() -> Mono.just(List.of()))); // 기본값 설정
 
         var contentMono = contentRepository.findByRequestId(id.value())
-                .switchIfEmpty(Mono.just(new NotificationRequestContentEntity())); // 기본값 설정
+                .switchIfEmpty(Mono.defer(() -> Mono.just(new NotificationRequestContentEntity()))); // 기본값 설정
 
         var templateMono = templateInfoRepository.findByRequestId(id.value())
-                .switchIfEmpty(Mono.just(new NotificationRequestTemplateInfoEntity())); // 기본값 설정
+                .switchIfEmpty(Mono.defer(() -> Mono.just(new NotificationRequestTemplateInfoEntity())));
 
         return requestRepository.findById(id.value()).flatMap(entity -> {
             return Mono.zip(recipientsMono, sendersMono, contentMono, templateMono).flatMap(tuple -> {
@@ -162,6 +161,7 @@ public class NotificationRequestRepositoryAdapter implements NotificationRequest
                 entity.setSenders(tuple.getT2());
                 entity.setContent(content);
                 entity.setTemplateInfo(templateInfo);
+
                 return Mono.just(mapper.toDomain(entity));
             });
         });

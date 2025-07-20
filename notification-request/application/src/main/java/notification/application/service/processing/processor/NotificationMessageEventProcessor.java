@@ -1,13 +1,13 @@
-package notification.application.service.processor;
+package notification.application.service.processing.processor;
 
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notification.application.notifiation.port.inbound.NotificationMessageProcessorUseCase;
-import notification.application.service.support.NotificationMessageDispatchHandler;
-import notification.application.service.support.NotificationMessageExceptionHandler;
-import notification.application.service.support.NotificationMessageOutboxLoader;
+import notification.application.notifiation.port.inbound.NotificationMessageEventProcessorUseCase;
+import notification.application.service.infrastructure.loader.NotificationMessageOutboxLoader;
+import notification.application.service.processing.handler.NotificationMessageDispatchHandler;
+import notification.application.service.processing.handler.NotificationMessageExceptionHandler;
 import notification.definition.annotations.UnitOfWork;
 import notification.definition.vo.outbox.MessageOutbox;
 import reactor.core.publisher.Mono;
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationMessageProcessor implements NotificationMessageProcessorUseCase {
+public class NotificationMessageEventProcessor implements NotificationMessageEventProcessorUseCase {
 
     private final NotificationMessageOutboxLoader notificationMessageOutboxLoader;
     private final NotificationMessageDispatchHandler notificationMessageDispatchHandler;

@@ -1,4 +1,4 @@
-package notification.application.service.support;
+package notification.application.service.processing.handler;
 
 import java.util.List;
 
@@ -9,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.port.outbound.persistence.NotificationRequestRepositoryPort;
 import notification.application.outbox.port.outbound.MessageOutboxEventPublisherPort;
 import notification.application.outbox.port.outbound.RequestOutboxRepositoryPort;
+import notification.application.service.infrastructure.saver.NotificationMessageWithOutboxSaver;
+import notification.application.service.processing.parser.NotificationRequestParser;
+import notification.definition.annotations.UnitOfWork;
+import notification.definition.enums.Propagation;
 import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationRequest;
 import reactor.core.publisher.Mono;
@@ -30,6 +34,7 @@ public class NotificationRequestProcessingHandler {
      * @param domain NotificationRequest
      * @return Mono<Void>
      */
+    @UnitOfWork(propagation = Propagation.REQUIRES_NEW)
     public Mono<List<MessageOutbox>> handle(NotificationRequest domain) {
         log.info("Handling NotificationRequest: {}", domain.getRequestId().value());
 

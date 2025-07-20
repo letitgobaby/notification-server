@@ -26,7 +26,7 @@ import notification.adapter.web.exceptions.GlobalExceptionHandler;
 import notification.adapter.web.mapper.NotificationCreateRequestMapper;
 import notification.application.notifiation.dto.NotificationRequestCommand;
 import notification.application.notifiation.dto.NotificationRequestResult;
-import notification.application.notifiation.port.inbound.NotificationRequestReceviedUseCase;
+import notification.application.notifiation.port.inbound.ProcessNotificationRequestUseCase;
 import notification.definition.exceptions.BusinessRuleViolationException;
 import notification.definition.exceptions.DataNotFoundException;
 import notification.definition.exceptions.DuplicateRequestException;
@@ -42,7 +42,7 @@ class NotificationRequestControllerIntegrationTest {
     private WebTestClient webTestClient;
 
     @Mock
-    private NotificationRequestReceviedUseCase notificationRequestReceviedService;
+    private ProcessNotificationRequestUseCase notificationRequestReceviedService;
 
     @Mock
     private NotificationCreateRequestMapper notificationCreateRequestMapper;

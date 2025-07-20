@@ -1,4 +1,4 @@
-package notification.application.service.support;
+package notification.application.service.infrastructure.loader;
 
 import org.springframework.stereotype.Component;
 

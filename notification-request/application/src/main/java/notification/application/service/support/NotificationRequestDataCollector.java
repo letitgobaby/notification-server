@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notification.application.service.TemplateRenderingService;
+import notification.application.service.infrastructure.TemplateRenderingService;
 import notification.application.user.port.outbound.UserConfigProviderPort;
 import notification.definition.vo.CollectedData;
 import notification.definition.vo.RenderedContent;
