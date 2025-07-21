@@ -80,6 +80,19 @@ public class RequestOutbox {
     }
 
     /**
+     * 메시지가 성공적으로 전송되었을 때 호출되어 상태를 SENT로 변경합니다.
+     * PENDING 또는 IN_PROGRESS 상태에서만 호출 가능하며, 메시지를 삭제합니다.
+     */
+    public void markAsInProgress() {
+        if (this.status != OutboxStatus.PENDING) {
+            throw new BusinessRuleViolationException("Cannot mark as in progress when status is not PENDING");
+        }
+
+        this.status = OutboxStatus.IN_PROGRESS;
+        this.processedAt = Instant.now(); // 처리된 시각은 현재 시각으로 설정
+    }
+
+    /**
      * 메세지 전송에 실패 했을때 호출되어 상태를 FAILED로 변경합니다.
      * PENDING 상태에서만 호출 가능하며, 다음 재시도 시각을 설정해야 합니다.
      * 
@@ -97,6 +110,19 @@ public class RequestOutbox {
         this.status = OutboxStatus.FAILED;
         this.nextRetryAt = nextRetryAt; // 다음 재시도 시각 업데이트
         this.retryAttempts++; // 재시도 횟수 증가
+        this.processedAt = Instant.now(); // 처리된 시각은 현재 시각으로 설정
+    }
+
+    /**
+     * 메시지가 성공적으로 전송되었을 때 호출되어 상태를 SENT로 변경합니다.
+     * IN_PROGRESS 상태에서만 호출 가능하며, 처리된 시각을 현재 시각으로 설정합니다.
+     */
+    public void markAsSent() {
+        if (this.status != OutboxStatus.PENDING && this.status != OutboxStatus.IN_PROGRESS) {
+            throw new BusinessRuleViolationException("Cannot mark as sent when status is not PENDING or IN_PROGRESS");
+        }
+
+        this.status = OutboxStatus.SENT;
         this.processedAt = Instant.now(); // 처리된 시각은 현재 시각으로 설정
     }
 
