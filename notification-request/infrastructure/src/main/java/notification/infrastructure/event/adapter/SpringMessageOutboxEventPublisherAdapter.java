@@ -2,7 +2,6 @@ package notification.infrastructure.event.adapter;
 
 import java.time.Instant;
 
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -28,19 +27,16 @@ public class SpringMessageOutboxEventPublisherAdapter implements MessageOutboxEv
      * @return Mono<Void>
      */
     @Override
-    public Mono<Void> publish(MessageOutbox MessageOutbox) {
+    public Mono<Void> publish(MessageOutbox outbox) {
         return Mono.fromRunnable(() -> {
-            Instant scheduledAt = MessageOutbox.getNextRetryAt();
+            Instant scheduledAt = outbox.getNextRetryAt();
             Instant bufferTime = Instant.now().plusSeconds(5); // 버퍼 타임 설정 (5초)
             if (scheduledAt != null && scheduledAt.isAfter(bufferTime)) {
                 return; // 스케줄링된 요청은 이벤트 발행하지 않음
             }
 
-            applicationEventPublisher.publishEvent(createEvent(MessageOutbox));
+            applicationEventPublisher.publishEvent(new NotificationMessageReadyEvent(this, outbox));
         });
     }
 
-    private ApplicationEvent createEvent(MessageOutbox MessageOutbox) {
-        return new NotificationMessageReadyEvent(this, MessageOutbox);
-    }
 }

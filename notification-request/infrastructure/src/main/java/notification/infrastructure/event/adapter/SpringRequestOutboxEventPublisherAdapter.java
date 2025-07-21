@@ -2,7 +2,6 @@ package notification.infrastructure.event.adapter;
 
 import java.time.Instant;
 
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -36,13 +35,8 @@ public class SpringRequestOutboxEventPublisherAdapter implements RequestOutboxEv
                 return; // 스케줄링된 요청은 이벤트 발행하지 않음
             }
 
-            log.info("Publishing event for outbox: {}", outbox);
-            applicationEventPublisher.publishEvent(createEvent(outbox));
+            applicationEventPublisher.publishEvent(new NotificationRequestReceivedEvent(this, outbox));
         });
-    }
-
-    private ApplicationEvent createEvent(RequestOutbox outbox) {
-        return new NotificationRequestReceivedEvent(this, outbox);
     }
 
 }
