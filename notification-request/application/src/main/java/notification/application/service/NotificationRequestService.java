@@ -13,7 +13,6 @@ import notification.application.outbox.port.outbound.RequestOutboxEventPublisher
 import notification.application.service.infrastructure.saver.NotificationRequestWithOutboxSaver;
 import notification.definition.annotations.Idempotent;
 import notification.definition.vo.outbox.RequestOutbox;
-import notification.domain.NotificationRequest;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -41,12 +40,7 @@ public class NotificationRequestService implements ProcessNotificationRequestUse
     public Mono<NotificationRequestResult> handle(NotificationRequestCommand command, String idempotencyKey) {
         log.info("Handling notification request [{}]: {}", idempotencyKey, command.requester());
 
-        Mono<RequestOutbox> outboxFlow = parseCommand(command)
-                .flatMap(notificationRequestWithOutboxSaver::save);
-
-        return unitOfWorkExecutor.execute(
-                outboxFlow,
-                outbox -> requestOutboxEventPublisher.publish(outbox))
+        return unitOfWork(command)
                 .map(result -> NotificationRequestResult.success(result.getAggregateId()))
                 .onErrorResume(e -> {
                     log.error("Failed to handle notification request: {}", e.getMessage(), e);
@@ -54,11 +48,32 @@ public class NotificationRequestService implements ProcessNotificationRequestUse
                 });
     }
 
-    //
-    private Mono<NotificationRequest> parseCommand(NotificationRequestCommand command) {
+    /**
+     * 알림 요청 커맨드를 처리하기 위한 단위 작업을 실행합니다.
+     * 이 메서드는 트랜잭션 아웃박스 플로우를 실행하고, 결과를 아웃박스 이벤트 퍼블리셔에 전달합니다.
+     *
+     * @param command 알림 요청 커맨드
+     * @return Mono<RequestOutbox>
+     */
+    private Mono<RequestOutbox> unitOfWork(NotificationRequestCommand command) {
+        return unitOfWorkExecutor.execute(
+                doTransactionalOutboxFlow(command),
+                requestOutboxEventPublisher::publish // After-Commit
+        );
+    }
+
+    /**
+     * 알림 요청을 처리하는 트랜잭션 아웃박스 플로우를 수행합니다.
+     * 이 메서드는 알림 요청 커맨드를 받아서, 이를 데이터베이스에 저장하고 아웃박스 메시지를 생성합니다.
+     *
+     * @param command 알림 요청 커맨드
+     * @return Mono<RequestOutbox>
+     */
+    private Mono<RequestOutbox> doTransactionalOutboxFlow(NotificationRequestCommand command) {
         return Mono.just(command)
                 .flatMap(notificationRequestMapper::fromCommand)
-                .doOnError(e -> log.error("Failed to process notification request: {}", e.getMessage(), e));
+                .flatMap(notificationRequestWithOutboxSaver::save)
+                .doOnError(e -> log.error("Failed to save notification request: {}", e.getMessage(), e));
     }
 
 }
