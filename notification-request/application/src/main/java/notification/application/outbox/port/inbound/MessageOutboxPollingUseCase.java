@@ -2,8 +2,8 @@ package notification.application.outbox.port.inbound;
 
 import reactor.core.publisher.Mono;
 
-public interface PublishMessageOutboxEventsUseCase {
+public interface MessageOutboxPollingUseCase {
 
-    Mono<Void> publish();
+    Mono<Void> poll();
 
 }
