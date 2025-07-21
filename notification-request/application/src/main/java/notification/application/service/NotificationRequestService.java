@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import notification.application.common.port.outbound.UnitOfWorkExecutorPort;
 import notification.application.notifiation.dto.NotificationRequestCommand;
 import notification.application.notifiation.dto.NotificationRequestResult;
 import notification.application.notifiation.mapper.NotificationRequestCommandMapper;
@@ -11,6 +12,7 @@ import notification.application.notifiation.port.inbound.ProcessNotificationRequ
 import notification.application.outbox.port.outbound.RequestOutboxEventPublisherPort;
 import notification.application.service.infrastructure.saver.NotificationRequestWithOutboxSaver;
 import notification.definition.annotations.Idempotent;
+import notification.definition.vo.outbox.RequestOutbox;
 import notification.domain.NotificationRequest;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +24,7 @@ public class NotificationRequestService implements ProcessNotificationRequestUse
     private final NotificationRequestWithOutboxSaver notificationRequestWithOutboxSaver;
     private final RequestOutboxEventPublisherPort requestOutboxEventPublisher;
     private final NotificationRequestCommandMapper notificationRequestMapper;
+    private final UnitOfWorkExecutorPort unitOfWorkExecutor;
 
     /**
      * 알림 요청을 처리하는 메서드입니다.
@@ -38,12 +41,13 @@ public class NotificationRequestService implements ProcessNotificationRequestUse
     public Mono<NotificationRequestResult> handle(NotificationRequestCommand command, String idempotencyKey) {
         log.info("Handling notification request [{}]: {}", idempotencyKey, command.requester());
 
-        return parseCommand(command)
-                .flatMap(notificationRequestWithOutboxSaver::save) // UnitOfWork 적용
-                .flatMap(outbox -> {
-                    return requestOutboxEventPublisher.publish(outbox) // UnitOfWork 적용
-                            .thenReturn(NotificationRequestResult.success(outbox.getAggregateId()));
-                })
+        Mono<RequestOutbox> outboxFlow = parseCommand(command)
+                .flatMap(notificationRequestWithOutboxSaver::save);
+
+        return unitOfWorkExecutor.execute(
+                outboxFlow,
+                outbox -> requestOutboxEventPublisher.publish(outbox))
+                .map(result -> NotificationRequestResult.success(result.getAggregateId()))
                 .onErrorResume(e -> {
                     log.error("Failed to handle notification request: {}", e.getMessage(), e);
                     return Mono.just(NotificationRequestResult.failure(e.getMessage()));

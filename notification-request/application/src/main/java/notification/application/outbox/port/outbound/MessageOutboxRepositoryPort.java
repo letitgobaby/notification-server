@@ -31,6 +31,14 @@ public interface MessageOutboxRepositoryPort {
     Mono<MessageOutbox> findById(OutboxId id);
 
     /**
+     * Finds an outbox message by its aggregate ID.
+     *
+     * @param aggregateId the aggregate ID of the outbox message
+     * @return Flux of outbox messages matching the aggregate ID
+     */
+    Flux<MessageOutbox> findByAggregateId(String aggregateId);
+
+    /**
      * Deletes an outbox message by its aggregate ID.
      *
      * @param aggregateId the aggregate ID of the outbox message to delete

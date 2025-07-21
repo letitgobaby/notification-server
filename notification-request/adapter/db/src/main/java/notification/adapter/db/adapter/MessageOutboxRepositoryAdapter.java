@@ -50,6 +50,13 @@ public class MessageOutboxRepositoryAdapter implements MessageOutboxRepositoryPo
     }
 
     @Override
+    public Flux<MessageOutbox> findByAggregateId(String aggregateId) {
+        return r2dbcMessageOutboxRepository.findByAggregateId(aggregateId)
+                .map(MessageOutboxEntity::toDomain)
+                .switchIfEmpty(Flux.empty());
+    }
+
+    @Override
     public Flux<MessageOutbox> findPendingAndFailedMessages() {
         String query = """
                 SELECT * FROM message_outbox
@@ -70,7 +77,8 @@ public class MessageOutboxRepositoryAdapter implements MessageOutboxRepositoryPo
                         .createdAt(row.get("created_at", LocalDateTime.class))
                         .build())
                 .all()
-                .map(MessageOutboxEntity::toDomain);
+                .map(MessageOutboxEntity::toDomain)
+                .switchIfEmpty(Flux.empty());
     }
 
 }

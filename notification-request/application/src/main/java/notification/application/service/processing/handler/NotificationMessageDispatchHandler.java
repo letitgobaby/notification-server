@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.port.outbound.message.NotificationMessagePublishPort;
 import notification.application.notifiation.port.outbound.persistence.NotificationMessageRepositoryPort;
 import notification.application.outbox.port.outbound.MessageOutboxRepositoryPort;
+import notification.definition.annotations.UnitOfWork;
 import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationMessage;
 import reactor.core.publisher.Mono;
@@ -17,7 +18,7 @@ import reactor.core.publisher.Mono;
 public class NotificationMessageDispatchHandler {
 
     private final NotificationMessageRepositoryPort notificationMessageRepository;
-    private final MessageOutboxRepositoryPort MessageOutboxRepository;
+    private final MessageOutboxRepositoryPort messageOutboxRepository;
     private final NotificationMessagePublishPort notificationMessagePublish;
 
     /**
@@ -27,6 +28,7 @@ public class NotificationMessageDispatchHandler {
      * @param outbox  아웃박스 메시지
      * @return Mono<Void>
      */
+    @UnitOfWork
     public Mono<Void> handle(NotificationMessage message, MessageOutbox outbox) {
         log.info("Dispatching NotificationMessage: {}", message.getMessageId().value());
 
@@ -49,7 +51,7 @@ public class NotificationMessageDispatchHandler {
     private Mono<Void> handleCompletedMessage(NotificationMessage message, MessageOutbox outbox) {
         return Mono.zip(
                 notificationMessageRepository.update(message),
-                MessageOutboxRepository.deleteById(outbox.getOutboxId()))
+                messageOutboxRepository.deleteById(outbox.getOutboxId()))
                 .then();
     }
 

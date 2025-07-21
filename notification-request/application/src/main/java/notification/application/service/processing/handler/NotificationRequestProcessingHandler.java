@@ -1,19 +1,13 @@
 package notification.application.service.processing.handler;
 
-import java.util.List;
-
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notification.application.notifiation.port.outbound.persistence.NotificationRequestRepositoryPort;
-import notification.application.outbox.port.outbound.MessageOutboxEventPublisherPort;
-import notification.application.outbox.port.outbound.RequestOutboxRepositoryPort;
 import notification.application.service.infrastructure.saver.NotificationMessageWithOutboxSaver;
 import notification.application.service.processing.parser.NotificationRequestParser;
 import notification.definition.annotations.UnitOfWork;
-import notification.definition.enums.Propagation;
-import notification.definition.vo.outbox.MessageOutbox;
 import notification.domain.NotificationRequest;
 import reactor.core.publisher.Mono;
 
@@ -23,10 +17,8 @@ import reactor.core.publisher.Mono;
 public class NotificationRequestProcessingHandler {
 
     private final NotificationRequestRepositoryPort notificationRequestRepository;
-    private final RequestOutboxRepositoryPort requestMessageOutboxRepository;
-    private final NotificationRequestParser notificationMessageParser;
     private final NotificationMessageWithOutboxSaver notificationMessageWithOutboxSaver;
-    private final MessageOutboxEventPublisherPort MessageOutboxEventPublisher;
+    private final NotificationRequestParser notificationMessageParser;
 
     /**
      * NotificationRequest를 처리하고, 해당 요청에 대한 NotificationMessage를 생성하여 저장합니다.
@@ -34,55 +26,21 @@ public class NotificationRequestProcessingHandler {
      * @param domain NotificationRequest
      * @return Mono<Void>
      */
-    @UnitOfWork(propagation = Propagation.REQUIRES_NEW)
-    public Mono<List<MessageOutbox>> handle(NotificationRequest domain) {
+    @UnitOfWork
+    public Mono<NotificationRequest> handle(NotificationRequest domain) {
         log.info("Handling NotificationRequest: {}", domain.getRequestId().value());
 
-        String requestId = domain.getRequestId().value();
-
-        // 알림 요청을 Processing 상태로 변경
-        domain.markAsProcessing();
-
-        return notificationRequestRepository.save(domain)
-                .flatMapMany(notificationMessageParser::parse)
-                .flatMap(notificationMessageWithOutboxSaver::save)
-                .flatMap(this::publishMessageOutbox)
-                .collectList()
-                .flatMap(savedList -> clearRequestMessageOutbox(requestId).thenReturn(savedList))
-                .flatMap(savedList -> {
-
-                    // 알림 요청을 Dispatched 상태로 변경하고 저장
-                    domain.markAsDispatched();
-
-                    return notificationRequestRepository.save(domain)
-                            .thenReturn(savedList);
-                });
-    }
-
-    /**
-     * Outbox 메시지를 삭제하여 요청에 대한 Outbox 메시지를 정리합니다.
-     * 
-     * @param requestId
-     * @return
-     */
-    private Mono<Void> clearRequestMessageOutbox(String requestId) {
-        log.info("Clearing request outbox messages for requestId: {}", requestId);
-
-        return requestMessageOutboxRepository.deleteByAggregateId(requestId)
-                .doOnError(err -> log.error("Failed to clear request outbox messages for requestId {}: {}",
-                        requestId, err.getMessage(), err));
-    }
-
-    /**
-     * Outbox 메시지를 발행합니다.
-     *
-     * @param MessageOutbox 발행할 Outbox 메시지
-     * @return Mono<MessageOutbox>
-     */
-    private Mono<MessageOutbox> publishMessageOutbox(MessageOutbox MessageOutbox) {
-        return MessageOutboxEventPublisher.publish(MessageOutbox)
-                .doOnError(err -> log.error("Failed to publish outbox message: {}", err.getMessage(), err))
-                .thenReturn(MessageOutbox);
+        return Mono.just(domain)
+                .doOnNext(NotificationRequest::markAsProcessing) // PROCESSING 상태로 변경
+                .flatMap(notificationRequestRepository::save) // 변경사항 저장
+                .flatMap(savedNotificationRequest -> {
+                    return notificationMessageParser.parse(savedNotificationRequest) // 메시지 파싱
+                            .flatMap(notificationMessageWithOutboxSaver::save) // 파싱된 메시지 Outbox 저장
+                            .collectList() // 모든 Outbox 저장이 완료되기를 기다림
+                            .thenReturn(savedNotificationRequest); // 원래 NotificationRequest 객체를 다음 flatMap으로 전달
+                })
+                .doOnNext(NotificationRequest::markAsDispatched) // DISPATCHED 상태로 변경
+                .flatMap(notificationRequestRepository::save); // DISPATCHED 상태 저장
     }
 
 }

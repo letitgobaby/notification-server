@@ -40,10 +40,6 @@ public class NotificationRequestOutboxLoader {
                     }
 
                     return Mono.just(domain);
-                })
-                .doOnError(error -> {
-                    log.error("Error loading NotificationRequest for outbox: {}: {}", message.getOutboxId(),
-                            error.getMessage(), error);
                 });
     }
 
