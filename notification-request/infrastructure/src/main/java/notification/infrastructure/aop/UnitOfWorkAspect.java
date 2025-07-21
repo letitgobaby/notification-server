@@ -24,7 +24,6 @@ import reactor.core.publisher.Mono;
 public class UnitOfWorkAspect {
 
     // private final TransactionalOperator transactionalOperator;
-
     private final ReactiveTransactionManager reactiveTransactionManager;
 
     @Around("@annotation(notification.definition.annotations.UnitOfWork)")

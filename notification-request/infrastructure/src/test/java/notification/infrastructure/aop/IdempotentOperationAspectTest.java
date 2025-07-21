@@ -34,9 +34,6 @@ class IdempotentOperationAspectTest {
     @Mock
     private MethodSignature signature;
 
-    @Mock
-    private Idempotent idempotent;
-
     static class TestService {
         @Idempotent(argKey = "id", operationType = "testOp")
         public Mono<String> testMethod(String id, String value) {
@@ -87,8 +84,6 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(testMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id", "value" });
         when(pjp.getArgs()).thenReturn(new Object[] { "abc123", "val" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("testOp");
 
         Mono<String> businessMono = Mono.just("result");
         when(pjp.proceed()).thenReturn(businessMono);
@@ -105,8 +100,7 @@ class IdempotentOperationAspectTest {
                 });
 
         // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
+        Object result = aspect.applyIdempotency(pjp);
 
         // Then
         assertThat(result).isInstanceOf(Mono.class);
@@ -116,49 +110,17 @@ class IdempotentOperationAspectTest {
     @Test
     void applyIdempotency_successWithEmptyOperationType() throws Throwable {
         // Given
-        when(signature.getMethod()).thenReturn(testMethod);
-        when(signature.getParameterNames()).thenReturn(new String[] { "id", "value" });
-        when(pjp.getArgs()).thenReturn(new Object[] { "abc123", "val" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn(""); // Empty operation type
-
-        Mono<String> businessMono = Mono.just("result");
-        when(pjp.proceed()).thenReturn(businessMono);
-
-        when(idempotentOperationService.performOperation(
-                eq("abc123"),
-                eq("testMethod"), // Should use method name
-                any(),
-                eq(String.class)))
-                .thenAnswer(invocation -> {
-                    Mono<String> businessLogic = invocation.getArgument(2);
-                    return businessLogic.map(result -> "finalResult");
-                });
-
-        // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
-
-        // Then
-        assertThat(result).isInstanceOf(Mono.class);
-        assertThat(((Mono<?>) result).block()).isEqualTo("finalResult");
-    }
-
-    @Test
-    void applyIdempotency_successWithIntegerType() throws Throwable {
-        // Given
-        when(signature.getMethod()).thenReturn(integerMonoMethod);
+        when(signature.getMethod()).thenReturn(integerMonoMethod); // Use integerMonoMethod which has empty
+                                                                   // operationType
         when(signature.getParameterNames()).thenReturn(new String[] { "id" });
         when(pjp.getArgs()).thenReturn(new Object[] { "abc123" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("intOp");
 
         Mono<Integer> businessMono = Mono.just(42);
         when(pjp.proceed()).thenReturn(businessMono);
 
         when(idempotentOperationService.performOperation(
                 eq("abc123"),
-                eq("intOp"),
+                eq("integerMonoMethod"), // Should use method name
                 any(),
                 eq(Integer.class)))
                 .thenAnswer(invocation -> {
@@ -167,8 +129,35 @@ class IdempotentOperationAspectTest {
                 });
 
         // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
+        Object result = aspect.applyIdempotency(pjp);
+
+        // Then
+        assertThat(result).isInstanceOf(Mono.class);
+        assertThat(((Mono<?>) result).block()).isEqualTo(100);
+    }
+
+    @Test
+    void applyIdempotency_successWithIntegerType() throws Throwable {
+        // Given
+        when(signature.getMethod()).thenReturn(integerMonoMethod);
+        when(signature.getParameterNames()).thenReturn(new String[] { "id" });
+        when(pjp.getArgs()).thenReturn(new Object[] { "abc123" });
+
+        Mono<Integer> businessMono = Mono.just(42);
+        when(pjp.proceed()).thenReturn(businessMono);
+
+        when(idempotentOperationService.performOperation(
+                eq("abc123"),
+                eq("integerMonoMethod"), // Use method name since operationType is empty
+                any(),
+                eq(Integer.class)))
+                .thenAnswer(invocation -> {
+                    Mono<Integer> businessLogic = invocation.getArgument(2);
+                    return businessLogic.map(result -> 100);
+                });
+
+        // When
+        Object result = aspect.applyIdempotency(pjp);
 
         // Then
         assertThat(result).isInstanceOf(Mono.class);
@@ -181,15 +170,13 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(customKeyMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "customKey", "otherParam" });
         when(pjp.getArgs()).thenReturn(new Object[] { "myCustomKey", "other" });
-        when(idempotent.argKey()).thenReturn("customKey");
-        when(idempotent.operationType()).thenReturn("customOp");
 
         Mono<String> businessMono = Mono.just("customResult");
         when(pjp.proceed()).thenReturn(businessMono);
 
         when(idempotentOperationService.performOperation(
                 eq("myCustomKey"),
-                eq("customOp"),
+                eq("customKeyMethod"), // Use method name since operationType is empty
                 any(),
                 eq(String.class)))
                 .thenAnswer(invocation -> {
@@ -198,8 +185,7 @@ class IdempotentOperationAspectTest {
                 });
 
         // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
+        Object result = aspect.applyIdempotency(pjp);
 
         // Then
         assertThat(result).isInstanceOf(Mono.class);
@@ -212,11 +198,9 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(testMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id", "value" });
         when(pjp.getArgs()).thenReturn(new Object[] { null, "val" });
-        when(idempotent.argKey()).thenReturn("id");
 
         // When & Then
-        // assertThatThrownBy(() -> aspect.applyIdempotency(pjp, idempotent))
-        assertThatThrownBy(() -> aspect.applyIdempotency(idempotent, pjp))
+        assertThatThrownBy(() -> aspect.applyIdempotency(pjp))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Idempotency argKey value not found: id");
     }
@@ -225,15 +209,15 @@ class IdempotentOperationAspectTest {
     void applyIdempotency_throwsIfArgKeyNotFoundInParameters() {
         // Given
         when(signature.getMethod()).thenReturn(testMethod);
-        when(signature.getParameterNames()).thenReturn(new String[] { "id", "value" });
+        when(signature.getParameterNames()).thenReturn(new String[] { "nonExistentKey", "value" }); // Parameter names
+                                                                                                    // don't match
+                                                                                                    // argKey
         when(pjp.getArgs()).thenReturn(new Object[] { "abc123", "val" });
-        when(idempotent.argKey()).thenReturn("nonExistentKey");
 
         // When & Then
-        // assertThatThrownBy(() -> aspect.applyIdempotency(pjp, idempotent))
-        assertThatThrownBy(() -> aspect.applyIdempotency(idempotent, pjp))
+        assertThatThrownBy(() -> aspect.applyIdempotency(pjp))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Idempotency argKey value not found: nonExistentKey");
+                .hasMessageContaining("Idempotency argKey value not found: id");
     }
 
     @Test
@@ -242,12 +226,9 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(notMonoMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id" });
         when(pjp.getArgs()).thenReturn(new Object[] { "abc" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("");
 
         // When & Then
-        // assertThatThrownBy(() -> aspect.applyIdempotency(pjp, idempotent))
-        assertThatThrownBy(() -> aspect.applyIdempotency(idempotent, pjp))
+        assertThatThrownBy(() -> aspect.applyIdempotency(pjp))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("@Idempotent only supports methods returning Mono<?>");
     }
@@ -258,12 +239,9 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(monoRawTypeMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id" });
         when(pjp.getArgs()).thenReturn(new Object[] { "abc" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("");
 
         // When & Then
-        // assertThatThrownBy(() -> aspect.applyIdempotency(pjp, idempotent))
-        assertThatThrownBy(() -> aspect.applyIdempotency(idempotent, pjp))
+        assertThatThrownBy(() -> aspect.applyIdempotency(pjp))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("Unable to determine Mono generic return type");
     }
@@ -274,8 +252,6 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(testMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id", "value" });
         when(pjp.getArgs()).thenReturn(new Object[] { "abc123", "val" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("testOp");
 
         RuntimeException businessException = new RuntimeException("Business logic failed");
         when(pjp.proceed()).thenThrow(businessException);
@@ -291,8 +267,7 @@ class IdempotentOperationAspectTest {
                 });
 
         // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
+        Object result = aspect.applyIdempotency(pjp);
 
         // Then
         assertThat(result).isInstanceOf(Mono.class);
@@ -307,8 +282,6 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(testMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id", "value" });
         when(pjp.getArgs()).thenReturn(new Object[] { "abc123", "val" });
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("testOp");
 
         RuntimeException serviceException = new RuntimeException("Service failed");
         when(idempotentOperationService.performOperation(
@@ -318,8 +291,7 @@ class IdempotentOperationAspectTest {
                 eq(String.class))).thenReturn(Mono.error(serviceException));
 
         // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
+        Object result = aspect.applyIdempotency(pjp);
 
         // Then
         assertThat(result).isInstanceOf(Mono.class);
@@ -334,15 +306,13 @@ class IdempotentOperationAspectTest {
         when(signature.getMethod()).thenReturn(integerMonoMethod);
         when(signature.getParameterNames()).thenReturn(new String[] { "id" });
         when(pjp.getArgs()).thenReturn(new Object[] { 12345 }); // Integer key
-        when(idempotent.argKey()).thenReturn("id");
-        when(idempotent.operationType()).thenReturn("intOp");
 
         Mono<Integer> businessMono = Mono.just(42);
         when(pjp.proceed()).thenReturn(businessMono);
 
         when(idempotentOperationService.performOperation(
                 eq("12345"), // Should be converted to string
-                eq("intOp"),
+                eq("integerMonoMethod"), // Use method name since operationType is empty
                 any(),
                 eq(Integer.class)))
                 .thenAnswer(invocation -> {
@@ -351,8 +321,7 @@ class IdempotentOperationAspectTest {
                 });
 
         // When
-        // Object result = aspect.applyIdempotency(pjp, idempotent);
-        Object result = aspect.applyIdempotency(idempotent, pjp);
+        Object result = aspect.applyIdempotency(pjp);
 
         // Then
         assertThat(result).isInstanceOf(Mono.class);
