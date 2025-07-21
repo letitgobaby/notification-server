@@ -7,7 +7,7 @@ import org.yaml.snakeyaml.constructor.DuplicateKeyException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notification.application.common.JsonPayloadFactory;
+import notification.application.common.port.outbound.JsonPayloadConverterPort;
 import notification.application.idempotency.Idempotency;
 import notification.application.idempotency.IdempotencyDuplicateKeyException;
 import notification.application.idempotency.port.inbound.IdempotentOperationUseCase;
@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 public class IdempotentOperationService implements IdempotentOperationUseCase {
 
     private final IdempotentRepositoryPort idempotencyRepository;
-    private final JsonPayloadFactory jsonPayloadFactory;
+    private final JsonPayloadConverterPort jsonPayloadConverter;
 
     /**
      * Idempotent operation을 수행합니다.
@@ -135,12 +135,12 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
 
     //
     private Mono<JsonPayload> getDataAsString(Object data) {
-        return Mono.fromCallable(() -> jsonPayloadFactory.toJsonPayload(data));
+        return Mono.fromCallable(() -> jsonPayloadConverter.toJsonPayload(data));
     }
 
     //
     private <T> Mono<T> getDataAsObject(JsonPayload JsonPayload, Class<T> type) {
-        return Mono.fromCallable(() -> jsonPayloadFactory.fromJsonPayload(JsonPayload, type));
+        return Mono.fromCallable(() -> jsonPayloadConverter.fromJsonPayload(JsonPayload, type));
     }
 
 }
