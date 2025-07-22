@@ -133,6 +133,7 @@ CREATE TABLE message_outbox (
     processed_at DATETIME(6) NULL,
     retry_attempts INT NOT NULL DEFAULT 0,
     next_retry_at DATETIME(6) NULL,
+    instance_id VARCHAR(36), -- Lock을 위한 ID, UUID 형식
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     
     INDEX idx_status_next_retry_at (status, next_retry_at)
@@ -148,6 +149,7 @@ CREATE TABLE request_outbox (
     processed_at DATETIME(6) NULL,
     retry_attempts INT NOT NULL DEFAULT 0,
     next_retry_at DATETIME(6) NULL,
+    instance_id VARCHAR(36), -- Lock을 위한 ID, UUID 형식
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     
     INDEX idx_status_next_retry_at (status, next_retry_at)

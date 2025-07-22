@@ -15,14 +15,6 @@ public interface NotificationMessageRepositoryPort {
     Mono<NotificationMessage> save(NotificationMessage domain);
 
     /**
-     * Updates the notification message in the repository.
-     *
-     * @param domain the notification message to update
-     * @return the updated notification message
-     */
-    Mono<NotificationMessage> update(NotificationMessage domain);
-
-    /**
      * Finds a notification message by its ID.
      *
      * @param id the ID of the notification message

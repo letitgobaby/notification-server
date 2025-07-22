@@ -50,7 +50,7 @@ public class NotificationMessageDispatchHandler {
      */
     private Mono<Void> handleCompletedMessage(NotificationMessage message, MessageOutbox outbox) {
         return Mono.zip(
-                notificationMessageRepository.update(message),
+                notificationMessageRepository.save(message),
                 messageOutboxRepository.deleteById(outbox.getOutboxId()))
                 .then();
     }

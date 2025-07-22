@@ -18,7 +18,6 @@ import notification.adapter.db.MariadbTestContainerConfig;
 import notification.adapter.db.NotificationMessageEntity;
 import notification.adapter.db.mapper.NotificationMessageEntityMapper;
 import notification.adapter.db.repository.R2dbcNotificationMessageRepository;
-import notification.definition.exceptions.DataNotFoundException;
 import notification.domain.NotificationMessage;
 import notification.domain.enums.DeliveryStatus;
 import notification.domain.enums.NotificationType;
@@ -121,7 +120,7 @@ class NotificationMessageRepositoryAdapterTest extends MariadbTestContainerConfi
         given(mapper.toDomain(entity)).willReturn(domain);
 
         // When & Then
-        StepVerifier.create(adapter.update(domain))
+        StepVerifier.create(adapter.save(domain))
                 .assertNext(updatedMessage -> {
                     assertThat(updatedMessage).isNotNull();
                     assertThat(updatedMessage.getMessageId()).isEqualTo(domain.getMessageId());
@@ -145,9 +144,8 @@ class NotificationMessageRepositoryAdapterTest extends MariadbTestContainerConfi
         given(messageRepository.save(entity)).willReturn(Mono.empty());
 
         // When & Then
-        StepVerifier.create(adapter.update(domain))
-                .expectError(DataNotFoundException.class)
-                .verify();
+        StepVerifier.create(adapter.save(domain))
+                .verifyComplete();
 
         then(mapper).should().toEntity(domain);
         then(messageRepository).should().save(entity);
@@ -163,7 +161,7 @@ class NotificationMessageRepositoryAdapterTest extends MariadbTestContainerConfi
         given(mapper.toEntity(domain)).willThrow(exception);
 
         // When & Then
-        StepVerifier.create(adapter.update(domain))
+        StepVerifier.create(adapter.save(domain))
                 .expectError(RuntimeException.class)
                 .verify();
 

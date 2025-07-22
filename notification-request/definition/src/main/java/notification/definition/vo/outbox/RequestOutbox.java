@@ -99,7 +99,7 @@ public class RequestOutbox {
      * @param nextRetryAt
      */
     public void markAsFailed(Instant nextRetryAt) {
-        if (this.status != OutboxStatus.PENDING) {
+        if (this.status != OutboxStatus.PENDING && this.status != OutboxStatus.IN_PROGRESS) {
             throw new BusinessRuleViolationException("Cannot mark as failed when status is not PENDING");
         }
 

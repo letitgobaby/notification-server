@@ -1,5 +1,7 @@
 package notification.application.service;
 
+import java.time.Instant;
+
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,7 @@ public class RequestOutboxPollingService implements RequestOutboxPollingUseCase 
      */
     @Override
     public Mono<Void> poll() {
-        return requestOutboxRepository.findPendingAndFailedMessages()
+        return requestOutboxRepository.fetchOutboxToProcess(Instant.now(), 1000)
                 .flatMap(outbox -> requestOutboxEventPublisher.publish(outbox))
                 .doOnError(e -> log.error("Error processing outbox message", e))
                 .then();

@@ -43,6 +43,9 @@ public class RequestOutboxEntity implements Persistable<String> {
     @Column("next_retry_at")
     private LocalDateTime nextRetryAt; // 다음 재시도 예정 시각 == 알림 발송 시각
 
+    @Column("instance_id")
+    private String instanceId; // Lock을 위한 ID, UUID 형식
+
     @CreatedDate
     @Column("created_at")
     private LocalDateTime createdAt;
@@ -50,7 +53,7 @@ public class RequestOutboxEntity implements Persistable<String> {
     @Builder
     public RequestOutboxEntity(String outboxId, String aggregateId, String payload, String status,
             LocalDateTime processedAt, int retryAttempts, LocalDateTime nextRetryAt,
-            LocalDateTime createdAt) {
+            String instanceId, LocalDateTime createdAt) {
         this.outboxId = outboxId;
         this.aggregateId = aggregateId;
         this.payload = payload;
@@ -58,6 +61,7 @@ public class RequestOutboxEntity implements Persistable<String> {
         this.processedAt = processedAt;
         this.retryAttempts = retryAttempts;
         this.nextRetryAt = nextRetryAt;
+        this.instanceId = instanceId; // Lock을 위한 ID, Domain으로 전달되지 않음
         this.createdAt = createdAt;
     }
 

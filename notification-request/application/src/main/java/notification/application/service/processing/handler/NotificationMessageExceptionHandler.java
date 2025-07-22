@@ -53,7 +53,7 @@ public class NotificationMessageExceptionHandler {
         Instant nextRetryAt = Instant.now().plusSeconds(Math.min(delay, MAX_RETRY_DELAY));
 
         outbox.markAsFailed(nextRetryAt);
-        return MessageOutboxRepository.update(outbox).then()
+        return MessageOutboxRepository.save(outbox).then()
                 .onErrorResume(err -> {
                     log.error("Failed to update outbox to FAILED: {}", err.getMessage(), err);
                     return Mono.empty();
@@ -70,7 +70,7 @@ public class NotificationMessageExceptionHandler {
      */
     private Mono<Void> handleCompletedMessage(NotificationMessage message, MessageOutbox outbox) {
         return Mono.zip(
-                notificationMessageRepository.update(message),
+                notificationMessageRepository.save(message),
                 MessageOutboxRepository.deleteById(outbox.getOutboxId())).then();
     }
 

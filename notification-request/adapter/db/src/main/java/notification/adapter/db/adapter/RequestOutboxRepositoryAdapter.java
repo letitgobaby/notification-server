@@ -1,14 +1,19 @@
 package notification.adapter.db.adapter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
 import lombok.RequiredArgsConstructor;
 import notification.adapter.db.RequestOutboxEntity;
 import notification.adapter.db.repository.R2dbcRequestOutboxRepository;
 import notification.application.outbox.port.outbound.RequestOutboxRepositoryPort;
+import notification.definition.enums.OutboxStatus;
+import notification.definition.utils.InstantDateTimeBridge;
 import notification.definition.vo.outbox.OutboxId;
 import notification.definition.vo.outbox.RequestOutbox;
 import reactor.core.publisher.Flux;
@@ -19,6 +24,7 @@ import reactor.core.publisher.Mono;
 public class RequestOutboxRepositoryAdapter implements RequestOutboxRepositoryPort {
 
     private final R2dbcRequestOutboxRepository r2dbcRequestOutboxRepository;
+    private final TransactionalOperator transactionalOperator;
     private final DatabaseClient databaseClient;
 
     @Override
@@ -44,15 +50,24 @@ public class RequestOutboxRepositoryAdapter implements RequestOutboxRepositoryPo
     }
 
     @Override
-    public Flux<RequestOutbox> findPendingAndFailedMessages() {
+    public Flux<RequestOutbox> fetchOutboxToProcess(Instant now, int limit) {
+        String instanceId = UUID.randomUUID().toString(); // 현재 인스턴스 ID로 설정
+
+        return transactionalOperator.transactional(updateOutboxForLock(now, limit, instanceId))
+                .thenMany(Flux.defer(() -> selectLockedOutbox(instanceId, limit)));
+    }
+
+    //
+    private Flux<RequestOutbox> selectLockedOutbox(String instanceId, int limit) {
         String query = """
                 SELECT * FROM request_outbox
-                WHERE status IN ('PENDING', 'FAILED')
-                ORDER BY created_at DESC
-                LIMIT 1000
-                        """;
+                WHERE instance_id = ?
+                ORDER BY created_at ASC
+                LIMIT %d
+                """.formatted(limit);
 
         return databaseClient.sql(query)
+                .bind(0, instanceId)
                 .map((row, metadata) -> RequestOutboxEntity.builder()
                         .outboxId(row.get("outbox_id", String.class))
                         .aggregateId(row.get("aggregate_id", String.class))
@@ -64,7 +79,35 @@ public class RequestOutboxRepositoryAdapter implements RequestOutboxRepositoryPo
                         .createdAt(row.get("created_at", LocalDateTime.class))
                         .build())
                 .all()
-                .map(RequestOutboxEntity::toDomain);
+                .map(RequestOutboxEntity::toDomain)
+                .switchIfEmpty(Flux.empty());
+    }
+
+    //
+    private Mono<Long> updateOutboxForLock(Instant now, int limit, String instanceId) {
+        String updateQuery = """
+                UPDATE request_outbox
+                SET instance_id = ?, status = ?, processed_at = ?
+                WHERE instance_id IS NULL
+                    AND outbox_id IN (
+                        SELECT outbox_id FROM (
+                        SELECT outbox_id FROM request_outbox
+                        WHERE status IN ('PENDING', 'FAILED')
+                            AND (next_retry_at IS NULL OR next_retry_at <= ?)
+                            AND instance_id IS NULL
+                        ORDER BY created_at ASC
+                        LIMIT %d
+                        ) AS subquery
+                    );
+                    """.formatted(limit);
+
+        return databaseClient.sql(updateQuery)
+                .bind(0, instanceId)
+                .bind(1, OutboxStatus.IN_PROGRESS.name())
+                .bind(2, InstantDateTimeBridge.toLocalDateTime(now))
+                .bind(3, InstantDateTimeBridge.toLocalDateTime(now))
+                .fetch()
+                .rowsUpdated();
     }
 
 }

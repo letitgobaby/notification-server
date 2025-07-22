@@ -1,5 +1,7 @@
 package notification.application.outbox.port.outbound;
 
+import java.time.Instant;
+
 import notification.definition.vo.outbox.MessageOutbox;
 import notification.definition.vo.outbox.OutboxId;
 import reactor.core.publisher.Flux;
@@ -13,14 +15,6 @@ public interface MessageOutboxRepositoryPort {
      * @return the saved outbox message
      */
     Mono<MessageOutbox> save(MessageOutbox domain);
-
-    /**
-     * Updates the outbox message in the repository.
-     *
-     * @param domain the outbox message to update
-     * @return the updated outbox message
-     */
-    Mono<MessageOutbox> update(MessageOutbox domain);
 
     /**
      * Finds an outbox message by its ID.
@@ -54,11 +48,14 @@ public interface MessageOutboxRepositoryPort {
     Mono<Void> deleteById(OutboxId id);
 
     /**
-     * Finds all outbox messages with the specified status.
+     * Fetches outbox messages that are ready to be processed.
+     * This method updates the status of the messages to IN_PROGRESS
+     * and returns a limited number of messages for processing.
      *
-     * @param status the status of the outbox messages to find
-     * @return a Flux of outbox messages matching the status
+     * @param now   the current time to check against next retry times
+     * @param limit the maximum number of messages to fetch
+     * @return a Flux of outbox messages ready for processing
      */
-    Flux<MessageOutbox> findPendingAndFailedMessages();
+    Flux<MessageOutbox> fetchOutboxToProcess(Instant now, int limit);
 
 }

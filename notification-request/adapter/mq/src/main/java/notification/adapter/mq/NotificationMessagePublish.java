@@ -20,7 +20,7 @@ public class NotificationMessagePublish implements NotificationMessagePublishPor
 
     @Override
     public Mono<Void> publish(NotificationMessage message) {
-        log.info("Publishing NotificationMessage: {}", message.getMessageId());
+        log.info("Publishing NotificationMessage: {}", message);
 
         return payloadMapper.toPayload(message).flatMap(payload -> {
             return publishRouter.publish(payload, message.getNotificationType());

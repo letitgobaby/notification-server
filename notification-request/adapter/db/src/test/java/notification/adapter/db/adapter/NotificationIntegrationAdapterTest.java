@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
@@ -70,7 +71,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
     }
 
     @Test
-    void shouldSaveAndRetrieveNotificationMessageWithExistingRequest() {
+    @DisplayName("기존 요청과 함께 알림 메시지를 저장하고 조회할 수 있다")
+    void saveAndRetrieveNotificationMessageWithExistingRequest() {
         NotificationMessage message = createNotificationMessage(savedRequest.getRequestId());
 
         //
@@ -98,7 +100,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
     }
 
     @Test
-    void shouldUpdateNotificationMessageStatus() {
+    @DisplayName("알림 메시지의 전송 상태를 업데이트할 수 있다")
+    void updateNotificationMessageStatus() {
         NotificationMessage originalMessage = createNotificationMessage(savedRequest.getRequestId());
 
         NotificationMessage savedMessage = messageAdapter.save(originalMessage).block();
@@ -106,7 +109,7 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
         //
         savedMessage.markAsDispatched();
 
-        StepVerifier.create(messageAdapter.update(savedMessage))
+        StepVerifier.create(messageAdapter.save(savedMessage))
                 .assertNext(updated -> {
                     assertThat(updated.getDeliveryStatus()).isEqualTo(DeliveryStatus.DISPATCHED);
                     assertThat(updated.getDispatchedAt()).isNotNull();
@@ -124,7 +127,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
     }
 
     @Test
-    void shouldDeleteNotificationMessage() {
+    @DisplayName("알림 메시지를 삭제할 수 있다")
+    void deleteNotificationMessage() {
         NotificationMessage message = createNotificationMessage(savedRequest.getRequestId());
 
         StepVerifier.create(messageAdapter.save(message))
@@ -141,7 +145,8 @@ public class NotificationIntegrationAdapterTest extends MariadbTestContainerConf
     }
 
     @Test
-    void shouldHandleMultipleMessagesForSameRequest() {
+    @DisplayName("동일한 요청에 대해 여러 개의 메시지를 처리할 수 있다")
+    void handleMultipleMessagesForSameRequest() {
         NotificationMessage emailMessage = createNotificationMessage(savedRequest.getRequestId());
         NotificationMessage smsMessage = createSmsNotificationMessage(savedRequest.getRequestId());
 

@@ -1,5 +1,7 @@
 package notification.application.outbox.port.outbound;
 
+import java.time.Instant;
+
 import notification.definition.vo.outbox.OutboxId;
 import notification.definition.vo.outbox.RequestOutbox;
 import reactor.core.publisher.Flux;
@@ -38,12 +40,23 @@ public interface RequestOutboxRepositoryPort {
      */
     Mono<Void> deleteById(OutboxId id);
 
+    // /**
+    // * Finds all outbox messages with the specified status.
+    // *
+    // * @param status the status of the outbox messages to find
+    // * @return a Flux of outbox messages matching the status
+    // */
+    // Flux<RequestOutbox> findPendingAndFailedMessages();
+
     /**
-     * Finds all outbox messages with the specified status.
+     * Fetches outbox messages that are ready to be processed.
+     * This method updates the status of the messages to IN_PROGRESS
+     * and returns a limited number of messages for processing.
      *
-     * @param status the status of the outbox messages to find
-     * @return a Flux of outbox messages matching the status
+     * @param now   the current time to check against next retry times
+     * @param limit the maximum number of messages to fetch
+     * @return a Flux of outbox messages ready for processing
      */
-    Flux<RequestOutbox> findPendingAndFailedMessages();
+    Flux<RequestOutbox> fetchOutboxToProcess(Instant now, int limit);
 
 }
