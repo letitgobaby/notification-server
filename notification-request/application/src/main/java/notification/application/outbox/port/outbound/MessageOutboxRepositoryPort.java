@@ -58,4 +58,14 @@ public interface MessageOutboxRepositoryPort {
      */
     Flux<MessageOutbox> fetchOutboxToProcess(Instant now, int limit);
 
+    /**
+     * Cleans up in-progress outbox messages that were created before the specified
+     * time.
+     * This is used to remove messages that are stuck in processing.
+     *
+     * @param before the time before which in-progress messages should be cleaned up
+     * @return Mono<Long> indicating the number of messages cleaned up
+     */
+    Mono<Long> cleanUpInProgressOutboxs(Instant before);
+
 }

@@ -1,5 +1,6 @@
 package notification.definition.vo.outbox;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -51,8 +52,20 @@ public class MessageOutbox {
             throw new MandatoryFieldException(e.getMessage(), e);
         }
 
-        if (nextRetryAt != null && nextRetryAt.isBefore(Instant.now().minusSeconds(10))) {
-            throw new BusinessRuleViolationException("Next retry time cannot be before created time");
+        /**
+         * # 유효성 검사
+         * nextRetryAt이 null이 아니고 createdAt이 null이 아닌 경우,
+         * nextRetryAt이 createdAt 이전이면 예외 발생
+         * 
+         * createdAt은 DB 생성시점에 설정되므로, nextRetryAt이 먼저 생성됨
+         * 스케줄링에 영향이 없도록 60초 버퍼를 둠
+         */
+        if (nextRetryAt != null && createdAt != null) {
+            Duration gap = Duration.between(nextRetryAt, createdAt); // createdAt - nextRetryAt
+            if (gap.compareTo(Duration.ofSeconds(60)) > 0) {
+                throw new BusinessRuleViolationException(
+                        "Next retry time is too early compared to created time (over 60 seconds difference)");
+            }
         }
 
         if (retryAttempts < 0) {
@@ -130,9 +143,6 @@ public class MessageOutbox {
      * @return
      */
     public boolean isMaxRetryAttemptsReached(int maxRetries) {
-        if (this.status != OutboxStatus.FAILED) {
-            throw new BusinessRuleViolationException("Cannot check retry attempts unless status is FAILED");
-        }
         return this.retryAttempts >= maxRetries;
     }
 

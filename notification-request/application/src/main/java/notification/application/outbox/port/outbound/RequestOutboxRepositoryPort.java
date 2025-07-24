@@ -40,14 +40,6 @@ public interface RequestOutboxRepositoryPort {
      */
     Mono<Void> deleteById(OutboxId id);
 
-    // /**
-    // * Finds all outbox messages with the specified status.
-    // *
-    // * @param status the status of the outbox messages to find
-    // * @return a Flux of outbox messages matching the status
-    // */
-    // Flux<RequestOutbox> findPendingAndFailedMessages();
-
     /**
      * Fetches outbox messages that are ready to be processed.
      * This method updates the status of the messages to IN_PROGRESS
@@ -58,5 +50,15 @@ public interface RequestOutboxRepositoryPort {
      * @return a Flux of outbox messages ready for processing
      */
     Flux<RequestOutbox> fetchOutboxToProcess(Instant now, int limit);
+
+    /**
+     * Cleans up in-progress outbox messages that were created before the specified
+     * time.
+     * This is used to remove messages that are stuck in processing.
+     *
+     * @param before the time before which in-progress messages should be cleaned up
+     * @return Mono<Long> indicating the number of messages cleaned up
+     */
+    Mono<Long> cleanUpInProgressOutboxs(Instant before);
 
 }

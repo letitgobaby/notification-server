@@ -1,5 +1,6 @@
 package notification.adapter.db;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import org.springframework.lang.Nullable;
 
 import lombok.Builder;
 import lombok.Getter;
+import notification.definition.utils.InstantDateTimeBridge;
 
 @Getter
 @Table("notification_request")
@@ -105,7 +107,8 @@ public class NotificationRequestEntity implements Persistable<String> {
         boolean isNew = this.createdAt == null;
         if (isNew) {
             // 새 엔티티인 경우 createdAt을 현재 시간으로 설정
-            this.createdAt = LocalDateTime.now();
+            // this.createdAt = LocalDateTime.now();
+            this.createdAt = InstantDateTimeBridge.toLocalDateTime(Instant.now());
         }
         return isNew;
     }

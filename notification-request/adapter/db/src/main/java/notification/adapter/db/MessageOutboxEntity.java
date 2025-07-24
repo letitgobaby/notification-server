@@ -1,5 +1,6 @@
 package notification.adapter.db;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
@@ -63,18 +64,6 @@ public class MessageOutboxEntity implements Persistable<String> {
         this.createdAt = createdAt;
     }
 
-    public MessageOutbox toDomain() {
-        return new MessageOutbox(
-                new OutboxId(this.getOutboxId()),
-                this.getAggregateId(),
-                new JsonPayload(this.getPayload()),
-                this.getRetryAttempts(),
-                InstantDateTimeBridge.toInstant(this.getNextRetryAt()),
-                OutboxStatus.valueOf(this.getStatus()),
-                InstantDateTimeBridge.toInstant(this.getProcessedAt()),
-                InstantDateTimeBridge.toInstant(this.getCreatedAt()));
-    }
-
     public static MessageOutboxEntity fromDomain(MessageOutbox domain) {
         return MessageOutboxEntity.builder()
                 .outboxId(domain.getOutboxId().value())
@@ -86,6 +75,18 @@ public class MessageOutboxEntity implements Persistable<String> {
                 .nextRetryAt(InstantDateTimeBridge.toLocalDateTime(domain.getNextRetryAt()))
                 .createdAt(InstantDateTimeBridge.toLocalDateTime(domain.getCreatedAt()))
                 .build();
+    }
+
+    public static MessageOutbox toDomain(MessageOutboxEntity entity) {
+        return new MessageOutbox(
+                new OutboxId(entity.getOutboxId()),
+                entity.getAggregateId(),
+                new JsonPayload(entity.getPayload()),
+                entity.getRetryAttempts(),
+                InstantDateTimeBridge.toInstant(entity.getNextRetryAt()),
+                OutboxStatus.valueOf(entity.getStatus()),
+                InstantDateTimeBridge.toInstant(entity.getProcessedAt()),
+                InstantDateTimeBridge.toInstant(entity.getCreatedAt()));
     }
 
     @Override
@@ -100,7 +101,8 @@ public class MessageOutboxEntity implements Persistable<String> {
         boolean isNew = this.createdAt == null;
         if (isNew) {
             // 새 엔티티인 경우 createdAt을 현재 시간으로 설정
-            this.createdAt = LocalDateTime.now();
+            // this.createdAt = LocalDateTime.now();
+            this.createdAt = InstantDateTimeBridge.toLocalDateTime(Instant.now());
         }
         return isNew;
     }

@@ -13,13 +13,11 @@ CREATE TABLE notification_request (
     requester_type VARCHAR(50) NOT NULL,
     requester_id VARCHAR(255) NOT NULL,
     notification_types VARCHAR(50) NOT NULL,
-    -- content_id VARCHAR(50),
-    -- template_info_id VARCHAR(50),
-    memo TEXT,
-    scheduled_at TIMESTAMP,
+    scheduled_at TIMESTAMP NULL DEFAULT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     failure_reason TEXT,
-    processed_at TIMESTAMP,
+    processed_at TIMESTAMP NULL DEFAULT NULL,
+    memo TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- 인덱스 (status + notification_types 조합)
@@ -107,8 +105,8 @@ CREATE TABLE notification_message (
     redirect_url VARCHAR(255),
     image_url VARCHAR(255),
     delivery_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    scheduled_at TIMESTAMP,
-    dispatched_at TIMESTAMP,
+    scheduled_at TIMESTAMP NULL DEFAULT NULL,
+    dispatched_at TIMESTAMP NULL DEFAULT NULL,
     failure_reason TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -130,11 +128,11 @@ CREATE TABLE message_outbox (
     aggregate_id VARCHAR(255) NOT NULL,
     payload TEXT NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    processed_at DATETIME(6) NULL,
+    processed_at TIMESTAMP NULL DEFAULT NULL,
     retry_attempts INT NOT NULL DEFAULT 0,
-    next_retry_at DATETIME(6) NULL,
+    next_retry_at TIMESTAMP NULL DEFAULT NULL,
     instance_id VARCHAR(36), -- Lock을 위한 ID, UUID 형식
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     INDEX idx_status_next_retry_at (status, next_retry_at)
 );
@@ -146,11 +144,11 @@ CREATE TABLE request_outbox (
     aggregate_id VARCHAR(255) NOT NULL,
     payload TEXT NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    processed_at DATETIME(6) NULL,
+    processed_at TIMESTAMP NULL DEFAULT NULL,
     retry_attempts INT NOT NULL DEFAULT 0,
-    next_retry_at DATETIME(6) NULL,
+    next_retry_at TIMESTAMP NULL DEFAULT NULL,
     instance_id VARCHAR(36), -- Lock을 위한 ID, UUID 형식
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     INDEX idx_status_next_retry_at (status, next_retry_at)
 );
