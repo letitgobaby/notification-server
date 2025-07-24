@@ -22,6 +22,8 @@ public class SpringRequestOutboxEventPublisherAdapter implements RequestOutboxEv
     /**
      * 아웃박스 메시지를 이벤트로 발행합니다.
      * 스케줄링된 요청은 이벤트를 발행하지 않습니다.
+     * 
+     * TODO: MQ로 변경 필요, 변경시 Adapter로 이동
      *
      * @param outbox 아웃박스 메시지
      * @return Mono<Void>

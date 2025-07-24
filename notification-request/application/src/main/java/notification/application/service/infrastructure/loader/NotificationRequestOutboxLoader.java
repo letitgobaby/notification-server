@@ -34,13 +34,15 @@ public class NotificationRequestOutboxLoader {
         return notificationRequestRepository.findById(requestId)
                 .switchIfEmpty(Mono.defer(() -> clearRequestMessageOutbox(message)))
                 .flatMap(domain -> {
-                    // 상태가 CANCELED인 경우 예외를 발생시킵니다.
+                    // 상태가 CANCELED인 경우 Outbox 메시지를 삭제합니다.
                     if (domain.getStatus() == RequestStatus.CANCELED) {
                         return clearRequestMessageOutbox(message);
                     }
 
                     return Mono.just(domain);
-                });
+                })
+                .doOnError(err -> log.error("Failed to load NotificationRequest for outbox {}: {}",
+                        message.getOutboxId(), err.getMessage(), err));
     }
 
     /**

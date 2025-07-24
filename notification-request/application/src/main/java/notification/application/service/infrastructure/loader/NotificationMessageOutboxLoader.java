@@ -28,18 +28,22 @@ public class NotificationMessageOutboxLoader {
      * @return NotificationMessage Mono
      */
     public Mono<NotificationMessage> load(MessageOutbox outbox) {
-        NotificationMessageId messageId = NotificationMessageId.of(outbox.getAggregateId());
+        log.debug("Loading NotificationMessage for outbox: {}", outbox.getOutboxId());
 
+        NotificationMessageId messageId = NotificationMessageId.of(outbox.getAggregateId());
         return notificationMessageRepository.findById(messageId)
                 .switchIfEmpty(clearMessageOutbox(outbox))
                 .flatMap(message -> {
+
                     // 이미 DISPATCHED 상태인 경우 Outbox 메시지를 삭제합니다.
                     if (message.getDeliveryStatus() == DeliveryStatus.DISPATCHED) {
                         return clearMessageOutbox(outbox);
                     }
 
                     return Mono.just(message);
-                });
+                })
+                .doOnError(err -> log.error("Failed to load NotificationMessage for outbox {}: {}",
+                        outbox.getOutboxId(), err.getMessage(), err));
     }
 
     /**

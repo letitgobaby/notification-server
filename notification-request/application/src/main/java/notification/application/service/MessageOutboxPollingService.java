@@ -29,7 +29,7 @@ public class MessageOutboxPollingService implements MessageOutboxPollingUseCase 
     public Mono<Void> poll() {
         return messageOutboxRepository.fetchOutboxToProcess(Instant.now(), 1000)
                 .flatMap(outbox -> MessageOutboxEventPublisher.publish(outbox))
-                .doOnError(e -> log.error("Error processing outbox message", e))
+                .doOnError(e -> log.error("Error processing MessageOutbox message", e))
                 .then();
     }
 

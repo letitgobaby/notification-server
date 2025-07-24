@@ -39,6 +39,7 @@ public class ReactiveUnitOfWorkExecutor implements UnitOfWorkExecutorPort {
     @Override
     public <T> Mono<T> execute(Mono<T> transactionalFlow, Propagation propagation,
             Function<T, Mono<Void>> afterCommitAction) {
+
         // 트랜잭션 정의 생성
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(mapPropagation(propagation));
@@ -49,11 +50,15 @@ public class ReactiveUnitOfWorkExecutor implements UnitOfWorkExecutorPort {
             return createTransactionalMono(transactionalFlow, def).doOnSuccess(result -> {
                 log.debug("Executing afterCommitAction for transaction completion.");
 
+                if (result == null) {
+                    log.warn("Result of transactional flow is null, skipping afterCommitAction.");
+                    return; // 결과가 null인 경우, afterCommitAction을 실행하지 않습니다.
+                }
+
                 // afterCommitAction 실행. Mono<Void>이므로 .subscribe()로 트리거
                 afterCommitAction.apply(result)
                         .doOnSuccess(unused -> log.debug("AfterCommitAction completed successfully."))
-                        .doOnError(e -> log.error("Error during afterCommitAction: {}",
-                                e.getMessage(), e))
+                        .doOnError(e -> log.error("Error during afterCommitAction: {}", e.getMessage(), e))
                         .subscribe();
             });
         }

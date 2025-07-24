@@ -10,7 +10,6 @@ import notification.application.service.infrastructure.loader.NotificationReques
 import notification.application.service.processing.handler.NotificationRequestExecutionHandler;
 import notification.application.service.processing.handler.NotificationRequestOutboxHandler;
 import notification.application.service.processing.handler.NotificationRequestProcessingHandler;
-import notification.definition.annotations.UnitOfWork;
 import notification.definition.vo.outbox.RequestOutbox;
 import notification.domain.NotificationRequest;
 import reactor.core.publisher.Mono;
@@ -34,7 +33,6 @@ public class NotificationRequestEventProcessor implements NotificationRequestEve
      * @param outbox RequestOutbox 알림 요청 아웃박스 메시지
      * @return 생성된 NotificationMessage 리스트
      */
-    @UnitOfWork
     @Override
     public Mono<Void> process(RequestOutbox outbox) {
         log.info("Processing NotificationRequest with outbox: {}", outbox.getAggregateId());
@@ -42,7 +40,8 @@ public class NotificationRequestEventProcessor implements NotificationRequestEve
         Mono<NotificationRequest> logic = notificationRequestOutboxLoader.load(outbox).flatMap(domain -> {
             return notificationRequestProcessingHandler.handle(domain)
                     .thenReturn(domain)
-                    .doOnSuccess(v -> log.info("Successfully processed request: {}", outbox.getAggregateId()))
+                    .doOnSuccess(v -> log.info("Successfully processed NotificationRequest request: {}",
+                            outbox.getAggregateId()))
                     .onErrorResume(e -> executionHandler.handle(domain, outbox, e).thenReturn(domain));
         });
 

@@ -38,7 +38,7 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
     @Override
     public <T> Mono<T> performOperation(String idempotencyKey, String operationType,
             Mono<T> businessLogic, Class<T> resultType) {
-        log.info("Performing idempotent operation: {} / {}", idempotencyKey, operationType);
+        log.debug("Performing idempotent operation: {} / {}", idempotencyKey, operationType);
 
         return idempotencyRepository.findById(idempotencyKey, operationType)
                 .switchIfEmpty(createIdempotency(idempotencyKey, operationType))
@@ -51,7 +51,7 @@ public class IdempotentOperationService implements IdempotentOperationUseCase {
                     // 새로운 요청: 비즈니스 로직 실행 및 결과 저장
                     return executeAndSave(idempotency, businessLogic, resultType);
                 })
-                .doOnSuccess(result -> log.info("Idempotent operation completed successfully: {} / {}",
+                .doOnSuccess(result -> log.debug("Idempotent operation completed successfully: {} / {}",
                         idempotencyKey, operationType))
                 .onErrorResume(e -> {
                     log.error("Failed to perform idempotent operation: {}", e.getMessage(), e);

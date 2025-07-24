@@ -23,13 +23,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UnitOfWorkAspect {
 
-    // private final TransactionalOperator transactionalOperator;
     private final ReactiveTransactionManager reactiveTransactionManager;
 
     @Around("@annotation(notification.definition.annotations.UnitOfWork)")
     public Object wrapWithTransaction(ProceedingJoinPoint pjp) throws Throwable {
         MethodSignature signature = (MethodSignature) pjp.getSignature();
-        log.info(" ** Transaction {} Start for method: {}", signature.getClass().getName(),
+        log.debug(" ** Transaction {} Start for method: {}", signature.getClass().getSimpleName(),
                 signature.getName());
 
         UnitOfWork unitOfWorkAnnotation = signature.getMethod().getAnnotation(UnitOfWork.class);
@@ -56,8 +55,8 @@ public class UnitOfWorkAspect {
                         return Mono.error(e);
                     }
                 }).doFinally(signalType -> {
-                    log.info(" ** Transaction {} completed for method: {} with signal: {}",
-                            signature.getClass().getName(), signature.getName(), signalType);
+                    log.debug(" ** Transaction {} completed for method: {} with signal: {}",
+                            signature.getClass().getSimpleName(), signature.getName(), signalType);
                 }));
     }
 
