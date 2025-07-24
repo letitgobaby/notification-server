@@ -1,4 +1,4 @@
-package notification.application.service.event.listener;
+package notification.infrastructure.event.listener;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -11,7 +11,7 @@ import notification.application.notifiation.port.inbound.NotificationMessageEven
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class NotificationMessageReadyEventListener {
+public class SpringNotificationMessageReadyEventListener {
 
     private final NotificationMessageEventProcessorUseCase notificationMessageProcessor;
 
@@ -27,5 +27,4 @@ public class NotificationMessageReadyEventListener {
 
         notificationMessageProcessor.process(event.getMessageOutbox()).subscribe();
     }
-
 }
