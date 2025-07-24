@@ -117,4 +117,20 @@ public class MessageOutboxRepositoryAdapter implements MessageOutboxRepositoryPo
                 .rowsUpdated();
     }
 
+    @Override
+    public Mono<Long> cleanUpInProgressOutboxs(Instant before) {
+        String updateQuery = """
+                UPDATE message_outbox
+                SET status = ?, instance_id = NULL
+                WHERE status = 'IN_PROGRESS'
+                    AND instance_id IS NOT NULL
+                    AND processed_at < ?;
+                """;
+
+        return databaseClient.sql(updateQuery)
+                .bind(0, OutboxStatus.PENDING.name())
+                .bind(1, InstantDateTimeBridge.toLocalDateTime(before))
+                .fetch()
+                .rowsUpdated();
+    }
 }

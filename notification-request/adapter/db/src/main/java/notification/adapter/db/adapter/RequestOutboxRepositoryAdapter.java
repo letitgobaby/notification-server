@@ -68,16 +68,18 @@ public class RequestOutboxRepositoryAdapter implements RequestOutboxRepositoryPo
 
         return databaseClient.sql(query)
                 .bind(0, instanceId)
-                .map((row, metadata) -> RequestOutboxEntity.builder()
-                        .outboxId(row.get("outbox_id", String.class))
-                        .aggregateId(row.get("aggregate_id", String.class))
-                        .payload(row.get("payload", String.class))
-                        .status(row.get("status", String.class))
-                        .processedAt(row.get("processed_at", LocalDateTime.class))
-                        .retryAttempts(row.get("retry_attempts", Integer.class))
-                        .nextRetryAt(row.get("next_retry_at", LocalDateTime.class))
-                        .createdAt(row.get("created_at", LocalDateTime.class))
-                        .build())
+                .map((row, metadata) -> {
+                    return RequestOutboxEntity.builder()
+                            .outboxId(row.get("outbox_id", String.class))
+                            .aggregateId(row.get("aggregate_id", String.class))
+                            .payload(row.get("payload", String.class))
+                            .status(row.get("status", String.class))
+                            .processedAt(row.get("processed_at", LocalDateTime.class))
+                            .retryAttempts(row.get("retry_attempts", Integer.class))
+                            .nextRetryAt(row.get("next_retry_at", LocalDateTime.class))
+                            .createdAt(row.get("created_at", LocalDateTime.class))
+                            .build();
+                })
                 .all()
                 .map(RequestOutboxEntity::toDomain)
                 .switchIfEmpty(Flux.empty());
@@ -106,6 +108,23 @@ public class RequestOutboxRepositoryAdapter implements RequestOutboxRepositoryPo
                 .bind(1, OutboxStatus.IN_PROGRESS.name())
                 .bind(2, InstantDateTimeBridge.toLocalDateTime(now))
                 .bind(3, InstantDateTimeBridge.toLocalDateTime(now))
+                .fetch()
+                .rowsUpdated();
+    }
+
+    @Override
+    public Mono<Long> cleanUpInProgressOutboxs(Instant before) {
+        String updateQuery = """
+                UPDATE request_outbox
+                SET status = ?, instance_id = NULL
+                WHERE status = 'IN_PROGRESS'
+                    AND instance_id IS NOT NULL
+                    AND processed_at < ?;
+                """;
+
+        return databaseClient.sql(updateQuery)
+                .bind(0, OutboxStatus.PENDING.name())
+                .bind(1, InstantDateTimeBridge.toLocalDateTime(before))
                 .fetch()
                 .rowsUpdated();
     }
