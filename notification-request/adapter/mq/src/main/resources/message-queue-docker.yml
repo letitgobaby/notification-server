@@ -1,6 +1,7 @@
 spring:
   kafka:
-    bootstrap-servers: kafka:9092 # Kafka 브로커 주소
+    # bootstrap-servers: kafka:9092 # Kafka 브로커 주소
+    bootstrap-servers: notification-kafka:9093 # 내부 통신용 포트
     producer:
       # key-serializer: org.apache.kafka.common.serialization.StringSerializer
       # value-serializer: org.apache.kafka.common.serialization.StringSerializer # String JSON으로 발행

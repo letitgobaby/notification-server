@@ -2,6 +2,7 @@ services:
 
   dind:
     image: docker:24.0.7-dind
+    hostname: notification-dind
     container_name: dind
     privileged: true
     environment:
@@ -13,14 +14,17 @@ services:
 
   notification-server:
     image: gradle:8.4-jdk17
+    hostname: notification-server
     container_name: notification-server
     working_dir: /app
     volumes:
       - .:/app
+    ports:
+      - "8080:8080" # Spring Boot 애플리케이션 포트
     entrypoint: sh -c "
       apt-get update && apt-get install -y curl &&
       echo 'Checking Docker daemon on dind:2375...' &&
-      until curl -f -s dind:2375/_ping; do
+      until curl -f -s notification-dind:2375/_ping; do
         echo 'Waiting for Docker daemon...';
         sleep 1;
       done &&
@@ -29,11 +33,10 @@ services:
       gradle clean build &&
       echo 'Build completed successfully!' &&
       java -jar bootstrap/build/libs/bootstrap.jar"
-      # java -Dspring.profiles.active=docker -jar bootstrap/build/libs/bootstrap.jar"
     environment:
       GRADLE_USER_HOME: /home/gradle/.gradle
       ENABLE_TESTCONTAINERS: "true"
-      DOCKER_HOST: tcp://dind:2375  # Testcontainers가 DinD에 접근하도록 설정
+      DOCKER_HOST: tcp://notification-dind:2375  # Testcontainers가 DinD에 접근하도록 설정
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
       - dind
@@ -45,6 +48,7 @@ services:
   ##
   mariadb:
     image: mariadb:10.5
+    hostname: notification-mariadb
     container_name: notification-mariadb
     ports:
       - "3306:3306"
@@ -53,38 +57,38 @@ services:
       MYSQL_DATABASE: notification
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    volumes:
+      - notification-mariadb-data:/var/lib/mysql # MariaDB 데이터 저장용 볼
     networks:
       - notification-net      
 
   ##
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0 # Confluent Zookeeper 이미지 사용 (Kafka와 호환성 좋음)
-    hostname: zookeeper
+    hostname: notification-zookeeper
     container_name: notification-zookeeper
     ports:
       - "2181:2181" # 호스트 2181 포트와 컨테이너 2181 포트 매핑
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - notification-zookeeper-data:/var/lib/zookeeper/data # Zookeeper 데이터 저장용 볼륨 마운트
+      - notification-zookeeper-logs:/var/lib/zookeeper/log # Zookeeper 로그 저장용 볼륨 마운트
     networks:
       - notification-net      
 
   ##
   kafka:
     image: confluentinc/cp-kafka:7.5.0 # Confluent Kafka 이미지 사용
-    hostname: kafka
+    hostname: notification-kafka
     container_name: notification-kafka
     ports:
       - "9092:9092" # 호스트 9092 포트와 컨테이너 9092 포트 매핑 (Spring 설정과 동일)
       - "9093:9093" # 내부 통신용 포트 (컨테이너 간 통신)
     environment:
       KAFKA_BROKER_ID: 1 # 브로커 ID, 클러스터에 여러 개면 유니크해야 함
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181 # Zookeeper 연결 정보 (서비스 이름:포트)
+      KAFKA_ZOOKEEPER_CONNECT: notification-zookeeper:2181 # Zookeeper 연결 정보 (서비스 이름:포트)
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://notification-kafka:9093,PLAINTEXT_HOST://localhost:9092 # 외부에서 접속할 주소
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # 리스너 보안 프로토콜
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT # 브로커 간 통신 리스너 이름
@@ -92,6 +96,8 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # 트랜잭션 로그 복제 계수 (개발용은 1)
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1 # 트랜잭션 ISR 최소 수
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # 토픽 자동 생성 활성화 (개발 환경에서 편리)
+    volumes:
+      - notification-kafka-data:/var/lib/kafka/data  # Kafka 로그 저장용 볼륨 마운트      
     depends_on: # Zookeeper가 먼저 시작되도록 설정
       - zookeeper
     networks:
@@ -100,17 +106,27 @@ services:
   ##
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+    hostname: notification-kafka-ui
     container_name: notification-kafka-ui
     ports:
       - "8088:8080"
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=notification-kafka:9093
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=notification-zookeeper:2181
+    volumes:
+      - notification-kafka-ui-data:/var/lib/kafka-ui # Kafka UI 데이터 저장용 볼륨 마운트
     depends_on:
       - kafka
     networks:
       - notification-net
+
+volumes:
+  notification-kafka-data:      
+  notification-kafka-ui-data:
+  notification-zookeeper-data:
+  notification-zookeeper-logs:
+  notification-mariadb-data:
 
 # 
 networks:

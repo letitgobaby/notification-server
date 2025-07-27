@@ -3,12 +3,12 @@ spring:
     activate:
       on-profile: docker
   r2dbc:
-    url: r2dbc:mariadb://mariadb:3306/notification
+    url: r2dbc:mariadb://notification-mariadb:3306/notification
     username: user
     password: password
   flyway:
     enabled: true
-    url: jdbc:mariadb://mariadb:3306/notification
+    url: jdbc:mariadb://notification-mariadb:3306/notification
     user: user
     password: password
     locations: classpath:db/migration
