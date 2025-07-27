@@ -1,0 +1,21 @@
+plugins {
+    id 'notification.spring'
+}
+
+bootJar { enabled = false }
+jar { enabled = true }
+
+dependencies {
+    implementation project(':definition')
+    implementation project(':domain')
+    implementation project(':application')
+    implementation project(':infrastructure')
+
+    implementation 'io.projectreactor.kafka:reactor-kafka'
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:kafka'
+    testImplementation 'org.testcontainers:testcontainers'
+}

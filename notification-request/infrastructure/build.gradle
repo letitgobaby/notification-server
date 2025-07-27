@@ -1,0 +1,16 @@
+plugins {
+    id 'notification.spring'
+}
+
+bootJar { enabled = false }
+jar { enabled = true }
+
+dependencies {
+    implementation project(':definition')
+    implementation project(':application')
+
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework:spring-tx'
+    // implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+
+}

@@ -1,0 +1,14 @@
+plugins {
+    id 'notification.spring'
+}
+
+bootJar { enabled = false }
+jar { enabled = true }
+
+dependencies {
+    implementation project(':definition')
+    implementation project(':domain')
+
+    implementation 'org.springframework:spring-tx'
+
+}

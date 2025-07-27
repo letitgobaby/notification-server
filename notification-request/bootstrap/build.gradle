@@ -1,0 +1,16 @@
+plugins {
+    id 'notification.spring'
+}
+
+bootJar { enabled = true }
+
+dependencies {
+    implementation project(':definition')
+    implementation project(':domain')
+    implementation project(':application')
+    implementation project(':infrastructure')
+    implementation project(':adapter:db')
+    implementation project(':adapter:mq')
+    implementation project(':adapter:web')
+    implementation project(':adapter:client')
+}
