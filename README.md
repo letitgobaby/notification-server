@@ -71,7 +71,7 @@ docker compose down --volumes --rmi all --remove-orphans
 
 ## 📖 사용자 알림요청 처리 프로세스
 
-- > [사용자 알림요청 처리와 설계 의도](./docs/notification-request-process.md)
+- > [사용자 알림요청 API 처리와 설계 의도](./docs/notification-request-process.md)
 
 <br/>
 
