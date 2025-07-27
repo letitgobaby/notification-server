@@ -1,4 +1,7 @@
 spring:
+  config:
+    activate:
+      on-profile: local
   r2dbc:
     url: r2dbc:mariadb://localhost:3306/notification
     username: user
@@ -11,7 +14,3 @@ spring:
     password: password
     locations: classpath:db/migration
     baseline-on-migrate: true
-# logging:
-#   level:
-#     org.springframework.r2dbc.core: DEBUG
-#     io.r2dbc.spi: DEBUG

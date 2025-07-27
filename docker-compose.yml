@@ -1,5 +1,47 @@
 services:
 
+  dind:
+    image: docker:24.0.7-dind
+    container_name: dind
+    privileged: true
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    logging:
+      driver: "none"
+    networks:
+      - notification-net      
+
+  notification-server:
+    image: gradle:8.4-jdk17
+    container_name: notification-server
+    working_dir: /app
+    volumes:
+      - .:/app
+    entrypoint: sh -c "
+      apt-get update && apt-get install -y curl &&
+      echo 'Checking Docker daemon on dind:2375...' &&
+      until curl -f -s dind:2375/_ping; do
+        echo 'Waiting for Docker daemon...';
+        sleep 1;
+      done &&
+      echo ' Docker is up!' &&
+      cd ./notification-request &&
+      gradle clean build &&
+      echo 'Build completed successfully!' &&
+      java -jar bootstrap/build/libs/bootstrap.jar"
+      # java -Dspring.profiles.active=docker -jar bootstrap/build/libs/bootstrap.jar"
+    environment:
+      GRADLE_USER_HOME: /home/gradle/.gradle
+      ENABLE_TESTCONTAINERS: "true"
+      DOCKER_HOST: tcp://dind:2375  # Testcontainers가 DinD에 접근하도록 설정
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - dind
+      - mariadb
+      - kafka
+    networks:
+      - notification-net      
+
   ##
   mariadb:
     image: mariadb:10.5
@@ -16,6 +58,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - notification-net      
 
   ##
   zookeeper:
@@ -27,6 +71,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - notification-net      
 
   ##
   kafka:
@@ -48,6 +94,8 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # 토픽 자동 생성 활성화 (개발 환경에서 편리)
     depends_on: # Zookeeper가 먼저 시작되도록 설정
       - zookeeper
+    networks:
+      - notification-net      
 
   ##
   kafka-ui:
@@ -61,3 +109,10 @@ services:
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     depends_on:
       - kafka
+    networks:
+      - notification-net
+
+# 
+networks:
+  notification-net:
+    driver: bridge

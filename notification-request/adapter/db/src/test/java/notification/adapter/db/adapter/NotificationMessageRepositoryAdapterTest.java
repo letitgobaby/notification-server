@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.context.annotation.Import;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import notification.adapter.db.MariadbTestContainerConfig;
 import notification.adapter.db.NotificationMessageEntity;
@@ -30,7 +29,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
-@Testcontainers
 @Import({ NotificationMessageRepositoryAdapter.class, NotificationMessageEntityMapper.class })
 class NotificationMessageRepositoryAdapterTest extends MariadbTestContainerConfig {
 

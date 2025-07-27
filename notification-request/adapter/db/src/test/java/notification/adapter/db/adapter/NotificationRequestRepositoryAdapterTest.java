@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.context.annotation.Import;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,7 +35,6 @@ import notification.domain.vo.sender.EmailSender;
 import reactor.test.StepVerifier;
 
 @DataR2dbcTest
-@Testcontainers
 @Import({ NotificationRequestRepositoryAdapter.class, NotificationRequestEntityMapper.class, ObjectMapper.class })
 class NotificationRequestRepositoryAdapterTest extends MariadbTestContainerConfig {
 

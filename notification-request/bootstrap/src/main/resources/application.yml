@@ -5,7 +5,27 @@ server:
 spring:
   application:
     name: notification-server
+  # config:
+  #   import:
+  #   - "classpath:database-local.yml"
+  #   - "classpath:message-queue-local.yml"
+
+---
+
+spring:
   config:
+    activate:
+      on-profile: local
     import:
-    - "classpath:database-config.yml"
-    - "classpath:message-queue-config.yml"
+    - "classpath:database-local.yml"
+    - "classpath:message-queue-local.yml"
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import:
+      - classpath:database-docker.yml
+      - classpath:message-queue-docker.yml

@@ -24,7 +24,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,7 +41,6 @@ import notification.domain.vo.sender.SmsSender;
 import reactor.test.StepVerifier;
 
 @ImportAutoConfiguration(KafkaAutoConfiguration.class)
-@Testcontainers
 @SpringBootTest(classes = TestMessageQueueApplication.class, properties = {
         "app.kafka.topic.notification=test-notification-topic"
 })
@@ -87,7 +85,8 @@ class NotificationMessagePublishIntegrationTest extends KafkaTestContainerConfig
     void publish_emailMessage_shouldSendToRealKafka() throws Exception {
         // given
         NotificationRequestId requestId = NotificationRequestId.create();
-        Recipient recipient = new Recipient("user123", "recipient@example.com", "01012345678", "device-token", "ko");
+        Recipient recipient = new Recipient("user123", "recipient@example.com", "01012345678", "device-token",
+                "ko");
         NotificationContent content = new NotificationContent("통합 테스트 제목", "통합 테스트 내용", "https://example.com",
                 "https://image.com");
         EmailSender senderInfo = new EmailSender("sender-id", "sender@example.com", "발송자");
@@ -137,7 +136,8 @@ class NotificationMessagePublishIntegrationTest extends KafkaTestContainerConfig
     void publish_smsMessage_shouldSendToRealKafka() throws Exception {
         // given
         NotificationRequestId requestId = NotificationRequestId.create();
-        Recipient recipient = new Recipient("user123", "recipient@example.com", "01012345678", "device-token", "ko");
+        Recipient recipient = new Recipient("user123", "recipient@example.com", "01012345678", "device-token",
+                "ko");
         NotificationContent content = new NotificationContent("SMS 제목", "SMS 통합 테스트 메시지", "https://example.com",
                 "https://image.com");
         SmsSender senderInfo = new SmsSender("sender-id", "01000000000", "발송자");
@@ -174,7 +174,8 @@ class NotificationMessagePublishIntegrationTest extends KafkaTestContainerConfig
     void publish_pushMessage_shouldSendToRealKafka() throws Exception {
         // given
         NotificationRequestId requestId = NotificationRequestId.create();
-        Recipient recipient = new Recipient("user123", "recipient@example.com", "01012345678", "device-token-123",
+        Recipient recipient = new Recipient("user123", "recipient@example.com", "01012345678",
+                "device-token-123",
                 "ko");
         NotificationContent content = new NotificationContent("푸시 제목", "푸시 내용", "https://example.com/redirect",
                 "https://example.com/image.jpg");
@@ -215,24 +216,28 @@ class NotificationMessagePublishIntegrationTest extends KafkaTestContainerConfig
     void publish_multipleMessageTypes_shouldSendAllToRealKafka() throws Exception {
         // given
         NotificationRequestId emailRequestId = NotificationRequestId.create();
-        Recipient emailRecipient = new Recipient("user123", "recipient@example.com", "01012345678", "device-token",
+        Recipient emailRecipient = new Recipient("user123", "recipient@example.com", "01012345678",
+                "device-token",
                 "ko");
         NotificationContent emailContent = new NotificationContent("멀티 이메일", "멀티 이메일 내용", "https://example.com",
                 "https://image.com");
         EmailSender emailSenderInfo = new EmailSender("sender-id", "sender@example.com", "발송자");
 
         NotificationMessage emailMessage = NotificationMessage.create(
-                emailRequestId, NotificationType.EMAIL, emailRecipient, emailContent, emailSenderInfo, Instant.now());
+                emailRequestId, NotificationType.EMAIL, emailRecipient, emailContent, emailSenderInfo,
+                Instant.now());
 
         NotificationRequestId smsRequestId = NotificationRequestId.create();
-        Recipient smsRecipient = new Recipient("user456", "recipient2@example.com", "01087654321", "device-token2",
+        Recipient smsRecipient = new Recipient("user456", "recipient2@example.com", "01087654321",
+                "device-token2",
                 "ko");
         NotificationContent smsContent = new NotificationContent("멀티 SMS 제목", "멀티 SMS", "https://example.com",
                 "https://image.com");
         SmsSender smsSenderInfo = new SmsSender("sender-id", "01000000000", "SMS 발송자");
 
         NotificationMessage smsMessage = NotificationMessage.create(
-                smsRequestId, NotificationType.SMS, smsRecipient, smsContent, smsSenderInfo, Instant.now());
+                smsRequestId, NotificationType.SMS, smsRecipient, smsContent, smsSenderInfo,
+                Instant.now());
 
         // when
         StepVerifier.create(notificationMessagePublish.publish(emailMessage))
@@ -255,7 +260,8 @@ class NotificationMessagePublishIntegrationTest extends KafkaTestContainerConfig
             multiConsumer.subscribe(List.of(emailTopicName, smsTopicName));
 
             // Get all records from both topics
-            ConsumerRecords<String, String> records = KafkaTestUtils.getRecords(multiConsumer, Duration.ofSeconds(10));
+            ConsumerRecords<String, String> records = KafkaTestUtils.getRecords(multiConsumer,
+                    Duration.ofSeconds(10));
 
             // Find records for our specific messages
             ConsumerRecord<String, String> emailRecord = null;
@@ -286,10 +292,12 @@ class NotificationMessagePublishIntegrationTest extends KafkaTestContainerConfig
             assertEquals(smsMessage.getMessageId().value(), smsMessageId);
 
             // 각 레코드의 페이로드 타입 확인
-            EmailMessagePayload emailPayload = objectMapper.readValue(emailRecord.value(), EmailMessagePayload.class);
+            EmailMessagePayload emailPayload = objectMapper.readValue(emailRecord.value(),
+                    EmailMessagePayload.class);
             assertEquals("멀티 이메일", emailPayload.getSubject());
 
-            SmsMessagePayload smsPayload = objectMapper.readValue(smsRecord.value(), SmsMessagePayload.class);
+            SmsMessagePayload smsPayload = objectMapper.readValue(smsRecord.value(),
+                    SmsMessagePayload.class);
             assertEquals("멀티 SMS", smsPayload.getMessageText());
         }
     }
